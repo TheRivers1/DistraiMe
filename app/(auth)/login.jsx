@@ -8,11 +8,11 @@ import { Link } from "expo-router";
 import { useState } from "react";
 import { useUser } from "../../hooks/useUser";
 import { Colors } from "../../constants/Colors";
-import ThemedLogo from "../../components/ThemedLogo";
-import Spacer from "../../components/Spacer";
-import ThemedButton from "../../components/ThemedButton";
-import ThemedView from "../../components/ThemedView";
-import ThemedTextInput from "../../components/ThemedTextInput";
+import ThemedLogo from "@components/ThemedLogo";
+import Spacer from "@components/Spacer";
+import ThemedButton from "@components/ThemedButton";
+import ThemedView from "@components/ThemedView";
+import ThemedTextInput from "@components/ThemedTextInput";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -42,6 +42,7 @@ const Login = () => {
           style={{ width: "80%", marginBottom: 20 }}
           placeholder="Email"
           keyboardType="email-address"
+          autoCapitalize='none'
           onChangeText={setEmail}
           value={email}
         />
@@ -50,6 +51,7 @@ const Login = () => {
           style={{ width: "80%", marginBottom: 20 }}
           placeholder="Password"
           secureTextEntry
+          autoCapitalize='none'
           onChangeText={setPassword}
           value={password}
         />
@@ -65,6 +67,7 @@ const Login = () => {
         <Link href="/(auth)/register">
           <Text style={styles.linkText}>Register instead</Text>
         </Link>
+
       </ThemedView>
     </TouchableWithoutFeedback>
   );

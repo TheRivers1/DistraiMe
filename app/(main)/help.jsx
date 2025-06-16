@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native'
-import Spacer from "../../components/Spacer"
-import ThemedView from '../../components/ThemedView'
+import Spacer from "@components/Spacer"
+import ThemedView from '@components/ThemedView'
 
 const Help = () => {
   return (

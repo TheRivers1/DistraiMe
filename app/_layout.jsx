@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { StyleSheet, ImageBackground, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { UserProvider } from "../contexts/UserContext";
 
@@ -13,10 +13,10 @@ const RootLayout = () => {
           headerTintColor: "black",
         }}
       >
-        <Stack.Screen name="(auth)" options={{headerShown: false}}/>
-        <Stack.Screen name="(dashboard)" options={{headerShown: false}}/>
-        <Stack.Screen name="index" options={{headerShown: false}} />
-        
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(main)" options={{ headerShown: false }} />
+        <Stack.Screen name="(main)/(dashboard)" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
       </Stack>
     </UserProvider>
   );
@@ -24,9 +24,4 @@ const RootLayout = () => {
 
 export default RootLayout;
 
-const styles = StyleSheet.create({
-  bgImage: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-});
+const styles = StyleSheet.create({});

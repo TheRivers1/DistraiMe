@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View, Pressable } from "react-native";
-import ThemedLogo from "../components/ThemedLogo";
-import Spacer from "../components/Spacer";
 import { Link } from "expo-router";
 import { Colors } from "../constants/Colors";
+import ThemedLogo from "@components/ThemedLogo";
+import Spacer from "@components/Spacer";
 
 const Home = () => {
   return (

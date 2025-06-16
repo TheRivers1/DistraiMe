@@ -8,13 +8,14 @@ import { Link } from "expo-router";
 import { useState } from "react";
 import { useUser } from "../../hooks/useUser";
 import { Colors } from "../../constants/Colors";
-import ThemedLogo from "../../components/ThemedLogo";
-import Spacer from "../../components/Spacer";
-import ThemedButton from "../../components/ThemedButton";
-import ThemedView from "../../components/ThemedView";
-import ThemedTextInput from "../../components/ThemedTextInput";
+import ThemedLogo from "@components/ThemedLogo";
+import Spacer from "@components/Spacer";
+import ThemedButton from "@components/ThemedButton";
+import ThemedView from "@components/ThemedView";
+import ThemedTextInput from "@components/ThemedTextInput";
 
 const Register = () => {
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null)
@@ -25,7 +26,7 @@ const Register = () => {
     setError(null)
 
     try {
-      await register(email, password);
+      await register(nome, email, password);
     } catch (error) {
       setError(error.message)
     }
@@ -40,8 +41,16 @@ const Register = () => {
 
         <ThemedTextInput
           style={{ width: "80%", marginBottom: 20 }}
+          placeholder="Nome"
+          onChangeText={setNome}
+          value={nome}
+        />
+
+        <ThemedTextInput
+          style={{ width: "80%", marginBottom: 20 }}
           placeholder="Email"
           keyboardType="email-address"
+          autoCapitalize='none'
           onChangeText={setEmail}
           value={email}
         />
@@ -50,6 +59,7 @@ const Register = () => {
           style={{ width: "80%", marginBottom: 20 }}
           placeholder="Password"
           secureTextEntry
+          autoCapitalize='none'
           onChangeText={setPassword}
           value={password}
         />

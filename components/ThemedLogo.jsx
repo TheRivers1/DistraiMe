@@ -1,5 +1,5 @@
 import { Image, Text, View, StyleSheet} from "react-native";
-import Logo from "../assets/favicon.png";
+import Logo from "../assets/distraime_logo.png";
 
 const ThemedLogo = () => {
   return (
@@ -23,10 +23,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 35,
     fontWeight: "bold",
-    marginLeft: 10,
     color: "black",
   },
   image: {
     marginVertical: 20,
+    height: 80,
+    width: 80,
   },
 });

@@ -1,24 +1,23 @@
-import { StyleSheet, Text, View } from 'react-native'
-import Spacer from "../../components/Spacer"
-import ThemedView from '../../components/ThemedView'
+import { StyleSheet, Text} from 'react-native'
+import Spacer from "@components/Spacer"
+import ThemedView from '@components/ThemedView'
 
-const Create = () => {
+const Comunity = () => {
   return (
     <ThemedView style={styles.container} safe={true}>
       <Text style={styles.heading}>
-        Distrai-me
+        Comunidade
       </Text>
       <Spacer/>
     </ThemedView>
   )
 }
 
-export default Create
+export default Comunity
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    //justifyContent: "center",
     alignItems: "center"
   },
   heading: {
