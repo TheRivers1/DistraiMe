@@ -24,7 +24,7 @@ const Metas = () => {
       </ThemedButton>
 
       <Modal visible={visible} animationType="slide" onRequestClose={hide}>
-        <SafeAreaView style={[styles.modal, {justifyContent:"center"}]}>
+        <SafeAreaView style={styles.modal}>
           <Text style={[styles.heading, {margin: 20}]}>Nova meta de poupança..</Text>
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     borderRadius: 20,
-    marginBottom: 30,
+    marginBottom: 20,
   },
   btnText: {
     color: "#f2f2f2",
