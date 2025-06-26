@@ -1,12 +1,10 @@
 import { Stack } from "expo-router";
 import { StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { UserProvider } from "../contexts/UserContext";
+import { View } from "react";
 
 const RootLayout = () => {
   return (
-    <UserProvider>
-      <StatusBar value="auto" />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: "white" },
@@ -18,7 +16,6 @@ const RootLayout = () => {
         <Stack.Screen name="(main)/(dashboard)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
       </Stack>
-    </UserProvider>
   );
 };
 

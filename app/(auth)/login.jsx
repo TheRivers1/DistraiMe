@@ -4,30 +4,43 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { useUser } from "../../hooks/useUser";
 import { Colors } from "../../constants/Colors";
 import ThemedLogo from "@components/ThemedLogo";
 import Spacer from "@components/Spacer";
 import ThemedButton from "@components/ThemedButton";
 import ThemedView from "@components/ThemedView";
 import ThemedTextInput from "@components/ThemedTextInput";
+import { supabase } from "lib/supabase";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  const { login } = useUser();
+  async function signInWithEmail() {
+    setLoading(true)
+    const { 
+      error,
+      data: { session },
+     } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    })
+    console.log(error)
+    if (session) {
+      router.push("/resumo")
+    }
+  }
 
   const handleSubmit = async () => {
-    setError(null)
 
     try {
-      await login(email, password);
+      await signInWithEmail(email, password);
     } catch (error) {
-      setError(error.message)
+        console.log(error)
     }
   };
 
@@ -61,7 +74,6 @@ const Login = () => {
         </ThemedButton>
 
         <Spacer/>
-        {error && <Text style={styles.error}>{error}</Text>}
 
         <Spacer height={100} />
         <Link href="/(auth)/register">

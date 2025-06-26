@@ -1,5 +1,4 @@
 import { StyleSheet, Text } from "react-native";
-import { useUser } from "../../../hooks/useUser";
 import { Slot, useRouter, usePathname } from "expo-router";
 import { Colors } from "constants/Colors";
 import Separator from "@components/Separator";
@@ -7,7 +6,6 @@ import ThemedView from "@components/ThemedView";
 import ThemedButton from "@components/ThemedButton";
 
 const Dashboard = () => {
-  const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -17,7 +15,7 @@ const Dashboard = () => {
     <>
       <ThemedView style={[styles.header, { paddingBottom: 0 }]} safe={true}>
         <Text style={styles.heading}>Bem vindo de volta</Text>
-        <Text style={styles.text}>{user.name}</Text>
+        <Text style={styles.text}></Text>
         <ThemedView style={styles.row}>
           <ThemedButton
             style={[styles.btnStyle, isActive("metas") && styles.activeButton]}
