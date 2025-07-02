@@ -13,7 +13,7 @@ const Metas = () => {
   const hide = () => setVisible(false);
 
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={styles.container} safe={false}>
       <ThemedButton style={styles.btnAdd} onPress={show}>
         <Ionicons
           size={26}
@@ -64,7 +64,7 @@ const Metas = () => {
         </SafeAreaView>
       </Modal>
 
-      <ThemedView>
+      <ThemedView style={false} safe={false}>
         <Text>Ainda sem metas definidas</Text>
       </ThemedView>
     </ThemedView>

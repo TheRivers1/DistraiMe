@@ -3,8 +3,9 @@ import {
   Text,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Colors } from "../../constants/Colors";
 import ThemedLogo from "@components/ThemedLogo";
 import Spacer from "@components/Spacer";
@@ -12,9 +13,11 @@ import ThemedButton from "@components/ThemedButton";
 import ThemedView from "@components/ThemedView";
 import ThemedTextInput from "@components/ThemedTextInput";
 import { supabase } from "lib/supabase";
+import { useState } from "react";
 
 const Register = () => {
 
+  const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -68,7 +71,7 @@ const Register = () => {
           value={password}
         />
 
-        <ThemedButton onPress={signUpWithEmail}>
+        <ThemedButton onPress={signUpWithEmail} style={undefined}>
           <Text style={{ color: "#f2f2f2" }}>Register</Text>
         </ThemedButton>
 

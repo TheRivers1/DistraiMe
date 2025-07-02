@@ -20,7 +20,7 @@ const Login = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  async function signInWithEmail() {
+  async function signInWithEmail(email: string, password: string) {
     setLoading(true)
     const { 
       error,
@@ -46,7 +46,7 @@ const Login = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemedView style={styles.container}>
+      <ThemedView style={styles.container} safe={false}>
         <ThemedLogo />
         <Spacer />
         <Text style={styles.title}>Login to Your Account</Text>
@@ -69,7 +69,7 @@ const Login = () => {
           value={password}
         />
 
-        <ThemedButton onPress={handleSubmit}>
+        <ThemedButton onPress={handleSubmit} style={undefined}>
           <Text style={{ color: "#f2f2f2" }}>Login</Text>
         </ThemedButton>
 

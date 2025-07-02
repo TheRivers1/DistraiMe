@@ -2,18 +2,18 @@ import { StyleSheet, Text} from 'react-native'
 import Spacer from "@components/Spacer"
 import ThemedView from '@components/ThemedView'
 
-const Resumo = () => {
+const Gastos = () => {
   return (
-    <ThemedView style={styles.container}>
+    <ThemedView style={styles.container} safe={false}>
       <Text style={styles.heading}>
-        RESUMO
+        GASTOS
       </Text>
       <Spacer/>
     </ThemedView>
   )
 }
 
-export default Resumo
+export default Gastos
 
 const styles = StyleSheet.create({
   container: {
