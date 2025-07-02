@@ -5,32 +5,36 @@ import {
   Keyboard,
 } from "react-native";
 import { Link } from "expo-router";
-import { useState } from "react";
-import { useUser } from "../../hooks/useUser";
 import { Colors } from "../../constants/Colors";
 import ThemedLogo from "@components/ThemedLogo";
 import Spacer from "@components/Spacer";
 import ThemedButton from "@components/ThemedButton";
 import ThemedView from "@components/ThemedView";
 import ThemedTextInput from "@components/ThemedTextInput";
+import { supabase } from "lib/supabase";
 
 const Register = () => {
-  const [nome, setNome] = useState("");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  
+  async function signUpWithEmail() {
+    setLoading(true)
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    })
+    if (error) Alert.alert(error.message)
+    if (session) router.push("/resumo");
+    if (!session) Alert.alert('Please check your inbox for email verification!')
+    setLoading(false)
+  }
 
-  const { register } = useUser();
-
-  const handleSubmit = async () => {
-    setError(null)
-
-    try {
-      await register(nome, email, password);
-    } catch (error) {
-      setError(error.message)
-    }
-  };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -64,12 +68,11 @@ const Register = () => {
           value={password}
         />
 
-        <ThemedButton onPress={handleSubmit}>
+        <ThemedButton onPress={signUpWithEmail}>
           <Text style={{ color: "#f2f2f2" }}>Register</Text>
         </ThemedButton>
 
         <Spacer />
-        {error && <Text style={styles.error}>{error}</Text>}
 
         <Spacer height={100} />
         <Link href="/(auth)/login">

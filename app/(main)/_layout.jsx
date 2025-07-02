@@ -1,11 +1,10 @@
 import { Tabs } from "expo-router";
 import { Colors } from "../../constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import UserOnly from "@components/auth/UserOnly";
+import { View } from "react";
 
 export default function DashboardLayout() {
   return (
-    <UserOnly>
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -89,6 +88,5 @@ export default function DashboardLayout() {
           }}
         />
       </Tabs>
-    </UserOnly>
   );
 }
