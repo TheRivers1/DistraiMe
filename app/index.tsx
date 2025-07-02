@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   },
   bottomBtnText: {
     color: "#fff",
-    fontWeight: "semi-bold",
+    fontWeight: "semibold",
     fontSize: 24,
     textAlign: "center",
   },
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   },
   middleText: {
     color: "#fff",
-    fontWeight: "none",
+    fontWeight: "normal",
     fontSize: 16,
     textAlign: "center",
     backgroundColor: "rgba(0,0,0,0.4)",

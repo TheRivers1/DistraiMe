@@ -16,7 +16,7 @@ const Dashboard = () => {
       <ThemedView style={[styles.header, { paddingBottom: 0 }]} safe={true}>
         <Text style={styles.heading}>Bem vindo de volta</Text>
         <Text style={styles.text}></Text>
-        <ThemedView style={styles.row}>
+        <ThemedView style={styles.row} safe={false}>
           <ThemedButton
             style={[styles.btnStyle, isActive("metas") && styles.activeButton]}
             onPress={() => router.replace("/(main)/(dashboard)/metas")}
@@ -38,7 +38,7 @@ const Dashboard = () => {
         </ThemedView>
         <Separator />
       </ThemedView>
-      <ThemedView style={styles.container}>
+      <ThemedView style={styles.container} safe={false}>
         <Slot />
       </ThemedView>
     </>

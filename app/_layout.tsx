@@ -1,7 +1,6 @@
 import { Stack } from "expo-router";
 import { StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { View } from "react";
 
 const RootLayout = () => {
   return (
