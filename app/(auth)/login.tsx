@@ -13,6 +13,7 @@ import ThemedButton from "@components/ThemedButton";
 import ThemedView from "@components/ThemedView";
 import ThemedTextInput from "@components/ThemedTextInput";
 import { supabase } from "lib/supabase";
+import ThemedLoader from "@components/ThemedLoader";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -21,66 +22,71 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   async function signInWithEmail(email: string, password: string) {
-    setLoading(true)
-    const { 
+    setLoading(true);
+    const {
       error,
       data: { session },
-     } = await supabase.auth.signInWithPassword({
+    } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
-    })
-    console.log(error)
+    });
+    console.log(error);
     if (session) {
-      router.push("/resumo")
+      router.push("/resumo");
     }
   }
 
   const handleSubmit = async () => {
-
     try {
       await signInWithEmail(email, password);
     } catch (error) {
-        console.log(error)
+      console.log(error);
+    } finally {
+      setLoading(false)
     }
+
   };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ThemedView style={styles.container} safe={false}>
-        <ThemedLogo />
-        <Spacer />
-        <Text style={styles.title}>Login to Your Account</Text>
+      {loading ? (
+        <ThemedLoader />
+      ) : (
+        <ThemedView style={styles.container} safe={false}>
+          <ThemedLogo />
+          <Spacer />
+          <Text style={styles.title}>Login to Your Account</Text>
 
-        <ThemedTextInput
-          style={{ width: "80%", marginBottom: 20 }}
-          placeholder="Email"
-          keyboardType="email-address"
-          autoCapitalize='none'
-          onChangeText={setEmail}
-          value={email}
-        />
+          <ThemedTextInput
+            style={{ width: "80%", marginBottom: 20 }}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            onChangeText={setEmail}
+            value={email}
+          />
 
-        <ThemedTextInput
-          style={{ width: "80%", marginBottom: 20 }}
-          placeholder="Password"
-          secureTextEntry
-          autoCapitalize='none'
-          onChangeText={setPassword}
-          value={password}
-        />
+          <ThemedTextInput
+            style={{ width: "80%", marginBottom: 20 }}
+            placeholder="Password"
+            secureTextEntry
+            autoCapitalize="none"
+            onChangeText={setPassword}
+            value={password}
+          />
 
-        <ThemedButton onPress={handleSubmit} style={undefined}>
-          <Text style={{ color: "#f2f2f2" }}>Login</Text>
-        </ThemedButton>
+          <ThemedButton onPress={handleSubmit} style={undefined}>
+            <Text style={{ color: "#f2f2f2" }}>Login</Text>
+          </ThemedButton>
 
-        <Spacer/>
+          <Spacer />
 
-        <Spacer height={100} />
-        <Link href="/(auth)/register">
-          <Text style={styles.linkText}>Register instead</Text>
-        </Link>
-
-      </ThemedView>
+          <Spacer height={100} />
+          <Link href="/(auth)/register">
+            <Text style={styles.linkText}>Register instead</Text>
+          </Link>
+        </ThemedView>
+      )}
     </TouchableWithoutFeedback>
   );
 };
@@ -117,5 +123,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 6,
     marginHorizontal: 10,
-  }
+  },
 });
