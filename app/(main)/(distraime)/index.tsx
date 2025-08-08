@@ -20,13 +20,13 @@ const landing_page = () => {
               styles.btnStyle,
               isActive("breathing") && styles.activeButton,
             ]}
-            onPress={() => router.replace("/(main)/(distraime)/breathing")}
+            onPress={() => router.push("/(main)/(distraime)/breathing")}
           >
             <Text style={styles.btnText}>Exercicio de Respiração</Text>
           </ThemedButton>
           <ThemedButton
             style={[styles.btnStyle, isActive("game") && styles.activeButton]}
-            onPress={() => router.replace("/(main)/(distraime)/game")}
+            onPress={() => router.push("/(main)/(distraime)/game")}
           >
             <Text style={styles.btnText}>Jogo</Text>
           </ThemedButton>
@@ -35,7 +35,7 @@ const landing_page = () => {
               styles.btnStyle,
               isActive("reading") && styles.activeButton,
             ]}
-            onPress={() => router.replace("/(main)/(distraime)/reading")}
+            onPress={() => router.push("/(main)/(distraime)/reading")}
           >
             <Text style={styles.btnText}>Leitura</Text>
           </ThemedButton>
