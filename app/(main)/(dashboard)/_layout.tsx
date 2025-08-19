@@ -18,10 +18,13 @@ const Dashboard = () => {
         <Text style={styles.text}></Text>
         <ThemedView style={styles.row} safe={false}>
           <ThemedButton
-            style={[styles.btnStyle, isActive("metas") && styles.activeButton]}
-            onPress={() => router.replace("/(main)/(dashboard)/metas")}
+            style={[
+              styles.btnStyle,
+              isActive("desafios") && styles.activeButton,
+            ]}
+            onPress={() => router.replace("/(main)/(dashboard)/desafios")}
           >
-            <Text style={styles.btnText}>METAS</Text>
+            <Text style={styles.btnText}>DESAFIOS</Text>
           </ThemedButton>
           <ThemedButton
             style={[styles.btnStyle, isActive("resumo") && styles.activeButton]}

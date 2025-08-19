@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { Slot, useRouter, usePathname } from "expo-router";
+import { useRouter, usePathname } from "expo-router";
 import { Colors } from "constants/Colors";
 import Separator from "@components/Separator";
 import ThemedView from "@components/ThemedView";
