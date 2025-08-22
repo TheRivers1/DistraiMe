@@ -11,6 +11,11 @@ import ThemedDropDown from "@components/ThemedDropDown";
 const Gastos = () => {
   const [visible, setVisible] = useState(false);
   const [selectedFruit, setSelectedFruit] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [items, setItems] = useState([
+    { label: "Apple", value: "apple" },
+    { label: "Banana", value: "banana" },
+  ]);
   const show = () => setVisible(true);
   const hide = () => setVisible(false);
 
@@ -36,29 +41,36 @@ const Gastos = () => {
           />
 
           <ThemedDropDown
-            style={{ width: "80%", marginBottom: 20 }}
+            value={selectedFruit}
+            onChange={setSelectedFruit}
             items={[
               { label: "Apple", value: "apple" },
               { label: "Banana", value: "banana" },
             ]}
-            value={selectedFruit}
-            onChangeValue={setSelectedFruit}
+            placeholder="Selecione uma categoria"
+            style={{ width: "100%", marginBottom: 20 }}
+            textStyle={{}}
+            optionStyle={{}}
+            optionTextStyle={{}}
           />
 
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
+            placeholder="Quantia"
+            keyboardType="decimal-pad"
           />
 
           <ThemedTextInput
-            style={{ width: "80%", marginBottom: 20 }}
-            placeholder="Password"
-            secureTextEntry
+            style={{
+              width: "80%",
+              marginBottom: 20,
+              height: 100,
+            }}
+            placeholder="Descrição"
+            multiline
             autoCapitalize="none"
           />
-          <ThemedButton style={styles.btnAdd}>
+          <ThemedButton style={[styles.btnAdd, { width: "50%" }]}>
             <Text style={styles.btnText}>Adicionar</Text>
           </ThemedButton>
           <Link href="" onPress={hide}>
@@ -111,5 +123,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f2f2f2",
     alignItems: "center",
+    justifyContent: "center",
   },
 });

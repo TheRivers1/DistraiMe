@@ -7,25 +7,30 @@ import Spacer from "@components/Spacer";
 const Home = () => {
   return (
     <View style={styles.container}>
-      <ThemedLogo/>
+      <ThemedLogo />
       <View style={styles.content}>
-        <Spacer height={200}/>
+        <Spacer height={200} />
         <Text style={styles.middleTittle}>Bem-Vindo</Text>
         <Text style={styles.middleText}>
           Regista-te para começares a tua jornada no controlo dos impulsos e na
           conquista dos teus objetivos.
         </Text>
-        <Link href={"/create"} style={styles.link}>
-          Create Page
-        </Link>
       </View>
       <View style={styles.bottomButtons}>
-        <Link href="/(auth)/login" style={{ backgroundColor: "#404040" }} asChild>
+        <Link
+          href="/(auth)/login"
+          style={{ backgroundColor: "#404040" }}
+          asChild
+        >
           <Pressable style={styles.bottomBtn}>
             <Text style={styles.bottomBtnText}>LOG IN</Text>
           </Pressable>
         </Link>
-        <Link href="/(auth)/register"  style={{ backgroundColor: Colors.primary }} asChild>
+        <Link
+          href="/(auth)/register"
+          style={{ backgroundColor: Colors.primary }}
+          asChild
+        >
           <Pressable style={styles.bottomBtn}>
             <Text style={styles.bottomBtnText}>REGISTO</Text>
           </Pressable>
@@ -76,7 +81,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "transparent",
-    marginTop: 70
+    marginTop: 70,
   },
   bottomButtons: {
     position: "absolute",
@@ -104,6 +109,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.4)",
     borderRadius: 12,
     padding: 3,
-    width: 390
+    width: 390,
   },
 });

@@ -32,7 +32,7 @@ const Login = () => {
     });
     console.log(error);
     if (session) {
-      router.push("/resumo");
+      router.push("/(distraime)");
     }
   }
 
@@ -42,9 +42,8 @@ const Login = () => {
     } catch (error) {
       console.log(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-
   };
 
   return (
