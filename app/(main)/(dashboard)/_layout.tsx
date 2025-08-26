@@ -9,7 +9,7 @@ const Dashboard = () => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const isActive = (page) => pathname.endsWith(page);
+  const isActive = (page: string) => pathname.endsWith(page);
 
   return (
     <>
