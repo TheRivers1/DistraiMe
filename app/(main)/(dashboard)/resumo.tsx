@@ -17,12 +17,15 @@ const chartConfig = {
 };
 
 const cores = [
-  "#ff9d00ff",
-  "#ff00ddff",
-  "#22ff00ff",
-  "#ffff00ff",
-  "#00ffc8ff",
-  "#007affff",
+  "#a50000ff",
+  "#ff5e00ff",
+  "#ffc400ff",
+  "#55e700ff",
+  "#009414ff",
+  "#00eeffff",
+  "#00a2d3ff",
+  "#0066ffff",
+  "#0300a3ff",
 ];
 
 const Resumo = () => {
@@ -63,11 +66,11 @@ const Resumo = () => {
 
       // fetch transactions for user in month
       const { data, error } = await supabase
-        .from("transactions")
-        .select("category, amount, date")
+        .from("gastos")
+        .select('valor, categoria!inner( nome )')
         .eq("user_id", user.id)
-        .gte("date", start)
-        .lt("date", end);
+        .gte("data_gasto", start)
+        .lt("data_gasto", end);
 
       if (!mounted) return;
       if (error) {
@@ -87,11 +90,11 @@ const Resumo = () => {
 
       // aggregate totals by category
       const totals: Record<string, number> = {};
-      for (const row of data) {
-        const cat = row.category ?? "Unknown";
-        const amt = Number(row.amount) || 0;
+      data.forEach(item => {
+        const cat = item.categoria.nome;
+        const amt = item.valor;
         totals[cat] = (totals[cat] || 0) + amt;
-      }
+      });
 
       // build pie data
       const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
@@ -124,7 +127,7 @@ const Resumo = () => {
           {"<"}
         </Text>
         <Text style={styles.monthLabel}>
-          {new Date(0, currentMonth).toLocaleString(undefined, {
+          {new Date(0, currentMonth).toLocaleString('pt-PT', {
             month: "long",
           })}
         </Text>

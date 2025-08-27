@@ -1,30 +1,38 @@
 import { StyleSheet, Text } from "react-native";
 import ThemedView from "@components/ThemedView";
+import { useEffect, useState } from "react";
+import { supabase } from "lib/supabase";
 
 const Desafios = () => {
+  const [desafios, setDesafios] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDesafios = async () => {
+      const { data, error } = await supabase.from("desafios").select("*");
+      if (error) {
+        console.error(error);
+        setDesafios([]);
+      } else {
+        setDesafios(data || []);
+      }
+      setLoading(false);
+    };
+    fetchDesafios();
+  }, []);
+
   return (
     <ThemedView style={styles.container} safe={false}>
-      <ThemedView safe={false} style={styles.desafio}>
-        <Text style={styles.heading}>Desafio #1</Text>
-        <Text style={styles.description}>
-          Lorem ipsum, ipsum lorem, is a random regenratede text that does a bla
-          bla bla
-        </Text>
-      </ThemedView>
-      <ThemedView safe={false} style={styles.desafio}>
-        <Text style={styles.heading}>Desafio #2</Text>
-        <Text style={styles.description}>
-          Lorem ipsum, ipsum lorem, is a random regenratede text that does a bla
-          bla bla
-        </Text>
-      </ThemedView>
-      <ThemedView safe={false} style={styles.desafio}>
-        <Text style={styles.heading}>Desafio #3</Text>
-        <Text style={styles.description}>
-          Lorem ipsum, ipsum lorem, is a random regenratede text that does a bla
-          bla bla
-        </Text>
-      </ThemedView>
+      {loading ? (
+        <Text>Carregando...</Text>
+      ) : (
+        desafios.map((desafio, idx) => (
+          <ThemedView safe={false} style={styles.desafio} key={desafio.id || idx}>
+            <Text style={styles.heading}>{desafio.titulo || `Desafio #${idx + 1}`}</Text>
+            <Text style={styles.description}>{desafio.descricao || "Sem descrição."}</Text>
+          </ThemedView>
+        ))
+      )}
     </ThemedView>
   );
 };

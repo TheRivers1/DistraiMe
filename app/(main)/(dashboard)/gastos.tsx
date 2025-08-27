@@ -22,6 +22,8 @@ const Gastos = () => {
   const [description, setDescription] = useState("");
   const [dateInput, setDateInput] = useState(""); // optional "YYYY-MM-DD" or leave empty -> now
 
+
+
   const show = () => setVisible(true);
   const hide = () => {
     setVisible(false);
@@ -78,7 +80,7 @@ const Gastos = () => {
       console.warn("user not signed in");
       return;
     }
-
+    
     const data_gasto = dateInput
       ? new Date(dateInput).toISOString()
       : new Date().toISOString();
