@@ -67,7 +67,7 @@ const Resumo = () => {
       // fetch transactions for user in month
       const { data, error } = await supabase
         .from("gastos")
-        .select('valor, categoria!inner( nome )')
+        .select("valor, categoria!inner( nome )")
         .eq("user_id", user.id)
         .gte("data_gasto", start)
         .lt("data_gasto", end);
@@ -90,7 +90,7 @@ const Resumo = () => {
 
       // aggregate totals by category
       const totals: Record<string, number> = {};
-      data.forEach(item => {
+      data.forEach((item: any) => {
         const cat = item.categoria.nome;
         const amt = item.valor;
         totals[cat] = (totals[cat] || 0) + amt;
@@ -127,9 +127,12 @@ const Resumo = () => {
           {"<"}
         </Text>
         <Text style={styles.monthLabel}>
-          {new Date(0, currentMonth).toLocaleString('pt-PT', {
-            month: "long",
-          })}
+          {new Date(new Date().getFullYear(), currentMonth, 1).toLocaleString(
+            "pt-PT",
+            {
+              month: "long",
+            }
+          )}
         </Text>
         <Text
           style={styles.arrow}
