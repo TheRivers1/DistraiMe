@@ -22,7 +22,8 @@ const Gastos = () => {
   const [description, setDescription] = useState("");
   const [dateInput, setDateInput] = useState(""); // optional "YYYY-MM-DD" or leave empty -> now
 
-
+  const [recentExpenses, setRecentExpenses] = useState<any[]>([]);
+  const [loadingExpenses, setLoadingExpenses] = useState(false);
 
   const show = () => setVisible(true);
   const hide = () => {
@@ -53,6 +54,39 @@ const Gastos = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    async function loadExpenses() {
+      setLoadingExpenses(true);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setRecentExpenses([]);
+        setLoadingExpenses(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("gastos")
+        .select("id, nome, valor, descricao, data_gasto, categoria!inner(nome)")
+        .eq("user_id", user.id)
+        .order("data_gasto", { ascending: false })
+        .limit(10);
+      if (!mounted) return;
+      if (error) {
+        console.warn("fetch gastos error", error);
+        setRecentExpenses([]);
+      } else {
+        setRecentExpenses(data ?? []);
+      }
+      setLoadingExpenses(false);
+    }
+    loadExpenses();
+    return () => {
+      mounted = false;
+    };
+  }, [visible]);
+
   function clearForm() {
     setSelectedCategory(null);
     setName("");
@@ -80,16 +114,17 @@ const Gastos = () => {
       console.warn("user not signed in");
       return;
     }
-    
+
     const data_gasto = dateInput
       ? new Date(dateInput).toISOString()
       : new Date().toISOString();
 
     const payload = {
       user_id: user.id,
+      nome: name || null,
       categoria_id: selectedCategory,
       data_gasto,
-      descricao: description || name || null,
+      descricao: description || null,
       valor: value,
     };
 
@@ -131,7 +166,7 @@ const Gastos = () => {
 
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 12 }}
-            placeholder="Nome (opcional)"
+            placeholder="Nome"
             value={name}
             onChangeText={setName}
             keyboardType="default"
@@ -155,7 +190,7 @@ const Gastos = () => {
 
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 12 }}
-            placeholder="Quantia (ex: 12.50)"
+            placeholder="Quantia (ex: 12.50€)"
             value={amount}
             onChangeText={setAmount}
             keyboardType="decimal-pad"
@@ -198,8 +233,66 @@ const Gastos = () => {
         </SafeAreaView>
       </Modal>
 
-      <View style={{ marginTop: 24 }}>
-        <Text>Ainda sem gastos, parabéns!</Text>
+      <View style={{ width: "90%", marginTop: 16 }}>
+        <Text style={{ fontWeight: "bold", fontSize: 20, marginBottom: 8 }}>
+          Últimos gastos
+        </Text>
+        {loadingExpenses ? (
+          <Text>A carregar...</Text>
+        ) : recentExpenses.length === 0 ? (
+          <Text>Nenhum gasto registado.</Text>
+        ) : (
+          recentExpenses.map((gasto) => (
+            <View
+              key={gasto.id}
+              style={{
+                borderWidth: 1,
+                borderRadius: 14,
+                borderColor: "#161515ff",
+                backgroundColor: "#fff",
+                padding: 12,
+                marginBottom: 16,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text style={{ fontWeight: "bold", fontSize: 20 }}>
+                  {gasto.categoria?.nome ?? "Sem categoria"}
+                </Text>
+                <Text style={{ color: "#888", fontSize: 12 }}>
+                  {new Date(gasto.data_gasto).toLocaleDateString("pt-PT")}
+                </Text>
+              </View>
+
+              {/* Linha de baixo: Descrição e Valor */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginTop: 6,
+                }}
+              >
+                <Text style={{ flex: 1, fontSize: 16 }} numberOfLines={2}>
+                  {gasto.nome ?? ""}
+                </Text>
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    color: "#007AFF",
+                    fontSize: 16,
+                    marginLeft: 10,
+                  }}
+                >
+                  {Number(gasto.valor).toFixed(2)} €
+                </Text>
+              </View>
+            </View>
+          ))
+        )}
       </View>
     </ThemedView>
   );
