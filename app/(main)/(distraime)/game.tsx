@@ -1,4 +1,6 @@
+import { Colors } from "constants/Colors";
 import React, { useState, useEffect } from "react";
+import Separator from "@components/Separator";
 import {
   View,
   Text,
@@ -8,7 +10,7 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
+import Icon from "react-native-vector-icons/FontAwesome5";
 const randomArrFunction = (arr: any[]) => {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -18,18 +20,26 @@ const randomArrFunction = (arr: any[]) => {
 };
 const gameCardsFunction = () => {
   const icons = [
-    "paw",
-    "paw",
-    "heart",
-    "heart",
-    "tree",
-    "tree",
-    "star",
-    "star",
-    "bell",
-    "bell",
-    "gift",
-    "gift",
+    "tag",
+    "tag",
+    "wallet",
+    "wallet",
+    "coins",
+    "coins",
+    "clock",
+    "clock",
+    "brain",
+    "brain",
+    "money-bill",
+    "money-bill",
+    "dollar-sign",
+    "dollar-sign",
+    "piggy-bank",
+    "piggy-bank",
+    "font-awesome",
+    "font-awesome",
+    "trophy",
+    "trophy",
   ];
   const randomIcons = randomArrFunction(icons);
   return randomIcons.map((icon, index) => ({
@@ -94,44 +104,44 @@ const App = () => {
       setGameWon(true);
     }
   }, [matches]);
-  const msg = `Matches: ${matches} /
-			${cards.length / 2}`;
+  const msg = `Combinações: ${matches} | ${cards.length / 2}`;
   return (
     <View style={styles.container}>
-      <Text style={styles.header1}>GeeksforGeeks</Text>
-      <Text style={styles.header2}>Memory Pair Game using React-Native</Text>
-      <Text style={styles.matchText}>{msg}</Text>
       {gameWon ? (
         <View style={styles.winMessage}>
           <View style={styles.winMessageContent}>
-            <Text style={styles.winText}>Congratulations Geek!</Text>
-            <Text style={styles.winText}>You Won!</Text>
+            <Text style={styles.winText}>Parabéns!</Text>
+            <Text style={styles.winText}>Acabou de Ganhar!</Text>
+            <Button
+              title="Jogar Outra Vez"
+              onPress={() => {
+                setCards(gameCardsFunction());
+                setSelectedCards([]);
+                setMatches(0);
+                setWinMessage(new Animated.Value(0));
+                setGameWon(false);
+              }}
+            />
           </View>
-          <Button
-            title="Restart"
-            onPress={() => {
-              setCards(gameCardsFunction());
-              setSelectedCards([]);
-              setMatches(0);
-              setWinMessage(new Animated.Value(0));
-              setGameWon(false);
-            }}
-          />
         </View>
       ) : (
-        <View style={styles.grid}>
-          {cards.map((card) => (
-            <TouchableOpacity
-              key={card.id}
-              style={[styles.card, card.isFlipped && styles.cardFlipped]}
-              onPress={() => cardClickFunction(card)}
-            >
-              {card.isFlipped ? (
-                <Icon name={card.symbol} size={40} style={styles.cardIcon} />
-              ) : null}
-            </TouchableOpacity>
-          ))}
-        </View>
+        <>
+          <Text style={styles.matchText}>{msg}</Text>
+          <Separator width={"90%"} />
+          <View style={[styles.grid, { marginTop: "5%" }]}>
+            {cards.map((card) => (
+              <TouchableOpacity
+                key={card.id}
+                style={[styles.card, card.isFlipped && styles.cardFlipped]}
+                onPress={() => cardClickFunction(card)}
+              >
+                {card.isFlipped ? (
+                  <Icon name={card.symbol} size={40} style={styles.cardIcon} />
+                ) : null}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
       )}
     </View>
   );
@@ -143,20 +153,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "white",
   },
-  header1: {
-    fontSize: 36,
-    marginBottom: 10,
-    color: "green",
-  },
-  header2: {
-    fontSize: 18,
-    marginBottom: 20,
-    color: "black",
-    fontWeight: "bold",
-  },
   matchText: {
-    fontSize: 18,
+    fontSize: 24,
     color: "black",
+    marginBottom: "5%",
   },
   grid: {
     flexDirection: "row",
@@ -169,8 +169,8 @@ const styles = StyleSheet.create({
     margin: 10,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFD700",
-    borderRadius: 10,
+    backgroundColor: Colors.primary,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: "black",
   },
@@ -178,11 +178,11 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   cardIcon: {
-    color: "blue",
+    color: Colors.tabColor,
   },
   winMessage: {
     position: "absolute",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    backgroundColor: "rgba(0, 0, 0, 0)",
     width: "100%",
     height: "100%",
     justifyContent: "center",
@@ -190,14 +190,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   winMessageContent: {
-    backgroundColor: "rgba(255, 215, 0, 0.7)",
+    backgroundColor: "#ffffff",
     padding: 20,
     borderRadius: 10,
     alignItems: "center",
   },
   winText: {
     fontSize: 36,
-    color: "white",
+    color: "#000000",
   },
 });
 export default App;
