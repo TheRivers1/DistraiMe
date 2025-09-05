@@ -30,7 +30,6 @@ const Login = () => {
       email: email,
       password: password,
     });
-    console.log(error);
     if (session) {
       router.push("/(distraime)");
     }
