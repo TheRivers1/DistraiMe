@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   Modal,
+  TextInput,
 } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
 import { Button } from '@rneui/themed';
@@ -45,6 +46,16 @@ type Publicacao = {
   numero_comentarios?: number | null;
   utilizador?: Utilizador | null;
   liked?: boolean;
+};
+
+type Comentario = {
+  id: number;
+  conteudo: string;
+  data_comentario: string;
+  utilizadores?: {
+    name?: string;
+    avatar_url?: string;
+  };
 };
 
 // ---------- HELPERS ----------
@@ -156,6 +167,10 @@ export default function PublicacoesFeed() {
   const [visible, setVisible] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [conteudo, setConteudo] = useState("");
+  const [commentsVisible, setCommentsVisible] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Publicacao | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
 
   const show = () => setVisible(true);
   const hide = () => {
@@ -267,6 +282,112 @@ export default function PublicacoesFeed() {
     }
   }
 
+  async function openComments(post: Publicacao) {
+    setSelectedPost(post);
+    setCommentsVisible(true);
+    await loadComments(post.id);
+  }
+
+  async function loadComments(publicacaoId: number) {
+    try {
+      const { data, error } = await supabase
+        .from("comentarios_publicacao")
+        .select(`
+        id,
+        conteudo,
+        data_comentario,
+        utilizadores:user_id(name, avatar_url)
+      `)
+        .eq("publicacao_id", publicacaoId)
+        .order("data_comentario", { ascending: false });
+
+      if (error) throw error;
+
+      // Função para baixar imagem da storage
+      async function downloadImage(path?: string | null): Promise<string | null> {
+        if (!path) return null;
+        try {
+          const { data, error } = await supabase.storage
+            .from('user_profiles/pics')
+            .download(path);
+          if (error) throw error;
+
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(data);
+          });
+        } catch (err) {
+          console.error('Erro a baixar avatar:', err);
+          return null;
+        }
+      }
+
+      // Processa cada comentário e substitui avatar_url pelo data URL
+      const finalComments = await Promise.all(
+        (data || []).map(async (c: any) => {
+          const image = await downloadImage(c.utilizadores?.avatar_url);
+          return {
+            ...c,
+            utilizadores: { ...c.utilizadores, avatar_url: image },
+          };
+        })
+      );
+
+      setComments(finalComments);
+    } catch (err) {
+      console.error("Erro a carregar comentários", err);
+    }
+  }
+
+  async function handleAddComment() {
+    if (!newComment.trim() || !selectedPost) return;
+
+    try {
+      const { error } = await supabase
+        .from("comentarios_publicacao")
+        .insert({
+          publicacao_id: selectedPost.id,
+          user_id: session.user.id,
+          conteudo: newComment.trim(),
+        });
+
+      if (error) throw error;
+
+      setNewComment("");
+      await loadComments(selectedPost.id); // refresh lista
+    } catch (err) {
+      console.error("Erro ao adicionar comentário", err);
+    }
+  }
+
+  const renderComment = ({ item }: { item: Comentario }) => {
+    console.log('Item recebido no render:', item);
+
+    const avatar = item.utilizadores?.avatar_url || 'https://via.placeholder.com/48';
+    const name = item.utilizadores?.name || "Utilizador";
+
+    return (
+      <View style={[styles.comment, isDark ? styles.postDark : styles.postLight]}>
+        <Image source={{ uri: avatar }} style={styles.avatar} />
+        <View style={{ flex: 1 }}>
+          <View style={styles.row}>
+            <Text style={[styles.name, isDark ? styles.textDark : styles.textLight]}>
+              {name}
+            </Text>
+            <Text style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>
+              {" · "}{timeAgo(item.data_comentario)}
+            </Text>
+          </View>
+          <Text style={[styles.content, isDark ? styles.textDark : styles.textLight]}>
+            {item.conteudo}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   const renderItem = ({ item }: { item: Publicacao }) => {
     const avatar = item.utilizador?.avatar_url;
     const name = item.utilizador?.name || 'Utilizador';
@@ -282,7 +403,7 @@ export default function PublicacoesFeed() {
           {!!item.conteudo && <Text style={[styles.content, isDark ? styles.textDark : styles.textLight]}>{item.conteudo}</Text>}
           {!!item.imagem_url && <Image source={{ uri: item.imagem_url }} style={styles.postImage} />}
           <View style={styles.metaRow}>
-            <Text onPress={() => console.log("teste")} style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>💬 {item.numero_comentarios ?? 0}</Text>
+            <Text onPress={() => openComments(item)} style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>💬 {item.numero_comentarios ?? 0}</Text>
             <Text onPress={() => toggleLike(item)} style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>{item.liked ? '❤️' : '♡'} {item.numero_gostos ?? 0}</Text>
           </View>
         </View>
@@ -359,7 +480,82 @@ export default function PublicacoesFeed() {
           </Link>
         </SafeAreaView>
       </Modal>
+      <Modal
+        visible={commentsVisible}
+        animationType="slide"
+        onRequestClose={() => setCommentsVisible(false)}
+        transparent={false}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f2', padding: 10 }}>
+          {/* Cabeçalho */}
+          <Text style={[styles.heading, { marginBottom: 10, color: isDark ? '#fff' : '#000' }]}>
+            Comentários
+          </Text>
 
+          {/* FlatList com mesmo fundo do modal */}
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => {
+              const avatar = item.utilizadores?.avatar_url || 'https://via.placeholder.com/48';
+              const name = item.utilizadores?.name || "Utilizador";
+              const content = item.conteudo || "";
+              const date = item.data_comentario || new Date().toISOString();
+
+              return (
+                <View style={[isDark ? styles.commentItemDark : styles.commentItemLight]}>
+                  <Image source={{ uri: avatar }} style={styles.avatar} />
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.row}>
+                      <Text style={[styles.name, isDark ? styles.textDark : styles.textLight]}>
+                        {name}
+                      </Text>
+                      <Text style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>
+                        {" · "}{timeAgo(date)}
+                      </Text>
+                    </View>
+                    <Text style={[styles.content, isDark ? styles.textDark : styles.textLight]}>
+                      {content}
+                    </Text>
+                  </View>
+                </View>
+              );
+            }}
+            ListEmptyComponent={
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <Text style={isDark ? styles.mutedDark : styles.mutedLight}>
+                  Ainda não há comentários.
+                </Text>
+              </View>
+            }
+            contentContainerStyle={{ paddingBottom: 20, backgroundColor: isDark ? '#000' : '#f2f2f2' }}
+            style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f2' }}
+          />
+
+          {/* Input de comentário e botão enviar */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+            <TextInput
+              style={[styles.commentInput, { flex: 1, backgroundColor: isDark ? '#222' : '#fff', color: isDark ? '#fff' : '#000' }]}
+              placeholder="Escreve um comentário..."
+              placeholderTextColor={isDark ? '#aaa' : '#666'}
+              value={newComment}
+              onChangeText={setNewComment}
+            />
+            <Button
+              onPress={handleAddComment}
+              buttonStyle={{ backgroundColor: '#1d9bf0', borderRadius: 20 }}
+              title="Enviar"
+            />
+          </View>
+
+          {/* Botão fechar */}
+          <Button
+            onPress={() => setCommentsVisible(false)}
+            buttonStyle={{ backgroundColor: Colors.warning, borderRadius: 20, marginTop: 10 }}
+            title="Fechar"
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -392,6 +588,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  modalComments: {
+    flex: 1,
+    backgroundColor: "#f2f2f2",
+    padding: 20, // opcional, para não colar nas bordas
+  },
   btnText: {
     color: "#f2f2f2",
     fontSize: 20,
@@ -410,5 +611,42 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 26,
     textAlign: "center",
+  },
+  comment: {
+    flexDirection: "row",
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  commentInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#ccc",
+    backgroundColor: "#f9f9f9",
+  },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 10,
+    backgroundColor: "#fff",
+  },
+  commentItemLight: {
+    flexDirection: 'row',
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#ccc',
+    backgroundColor: '#f2f2f2', // mesmo fundo do modal
+  },
+  commentItemDark: {
+    flexDirection: 'row',
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#222',
+    backgroundColor: '#000', // mesmo fundo do modal
   },
 });
