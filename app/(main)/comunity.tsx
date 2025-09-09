@@ -44,6 +44,7 @@ type Publicacao = {
   numero_gostos?: number | null;
   numero_comentarios?: number | null;
   utilizador?: Utilizador | null;
+  liked?: boolean;
 };
 
 // ---------- HELPERS ----------
@@ -63,9 +64,8 @@ function timeAgo(iso?: string | null) {
 }
 
 // ---------- FETCH (paginado, pull-to-refresh) ----------
-async function fetchFeed({ limit = 20, cursor }: { limit?: number; cursor?: string | null }) {
-  // Nota: estamos a fazer uma junção simples à tabela utilizadores que tem FK user_id
-  // Ajusta o select se a tua FK for diferente.
+// Substitui a função fetchFeed inteira por isto
+async function fetchFeed({ limit = 20, cursor, userId }: { limit?: number; cursor?: string | null; userId: string }) {
 
 
   async function downloadImage(path: string): Promise<string> {
@@ -97,7 +97,7 @@ async function fetchFeed({ limit = 20, cursor }: { limit?: number; cursor?: stri
     return null
   }
 
-
+  // query que inclui a relação dos gostos (para sabermos se o user gostou)
   let q = supabase
     .from('publicacoes')
     .select(`
@@ -109,7 +109,8 @@ async function fetchFeed({ limit = 20, cursor }: { limit?: number; cursor?: stri
       data_publicacao,
       numero_gostos,
       numero_comentarios,
-      utilizadores!publicacoes_user_id_fkey(user_id, name, avatar_url)
+      utilizadores!publicacoes_user_id_fkey(user_id, name, avatar_url),
+      gostos_publicacao(user_id)
     `)
     .order('data_publicacao', { ascending: false })
     .limit(limit);
@@ -119,14 +120,27 @@ async function fetchFeed({ limit = 20, cursor }: { limit?: number; cursor?: stri
   const { data, error } = await q;
   if (error) throw error;
 
-  const finalArray = []
+  const finalArray: Publicacao[] = [];
   for (const row of data) {
-    const image = await downloadImage((row as any).utilizadores.avatar_url)
-    finalArray.push({ ...(row as Publicacao), utilizador: { ...row.utilizadores, avatar_url: image } })
+    // obtem imagem do profile (mantive a tua função downloadImage)
+    const image = await downloadImage((row as any).utilizadores?.avatar_url);
+
+    // determinamos se o utilizador atual já gostou desta publicação
+    let liked = false;
+    if (Array.isArray((row as any).gostos_publicacao) && userId) {
+      liked = (row as any).gostos_publicacao.some((g: any) => g.user_id === userId);
+    }
+
+    finalArray.push({
+      ...(row as Publicacao),
+      utilizador: { ...(row as any).utilizadores, avatar_url: image },
+      liked,
+    });
   }
 
-  return finalArray as Publicacao[];
+  return finalArray;
 }
+
 
 // ---------- COMPONENTE ----------
 export default function PublicacoesFeed() {
@@ -157,7 +171,7 @@ export default function PublicacoesFeed() {
   const loadInitial = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchFeed({ limit: 20 });
+      const data = await fetchFeed({ limit: 20, userId: session.user.id });
       setFeed(data);
       setCursor(data.length ? data[data.length - 1].data_publicacao ?? null : null);
     } catch (err: any) {
@@ -170,7 +184,7 @@ export default function PublicacoesFeed() {
   const onRefresh = useCallback(async () => {
     try {
       setRefreshing(true);
-      const data = await fetchFeed({ limit: 20 });
+      const data = await fetchFeed({ limit: 20, userId: session.user.id });
       setFeed(data);
       setCursor(data.length ? data[data.length - 1].data_publicacao ?? null : null);
     } catch (err: any) {
@@ -183,7 +197,7 @@ export default function PublicacoesFeed() {
   const loadMore = useCallback(async () => {
     if (!cursor) return; // sem cursor não há mais
     try {
-      const data = await fetchFeed({ limit: 20, cursor });
+      const data = await fetchFeed({ limit: 20, cursor, userId: session.user.id });
       if (data.length === 0) {
         setCursor(null);
         return;
@@ -200,33 +214,58 @@ export default function PublicacoesFeed() {
   }, [loadInitial]);
 
   async function handleAddExpense() {
-
-      if (!titulo) {
-        console.warn("Tem de escrever um titulo");
-        return;
-      }
-      if (!conteudo) {
-        console.warn("Tem de inserir conteúdo");
-        return;
-      }  
-      const payload = {
-        user_id: session.user.id,
-        titulo: titulo,
-        conteudo: conteudo
-      };
-  
-      const { error } = await supabase.from("publicacoes").insert([payload]);
-
-      if (error) {
-        console.warn("insert error", error);
-        return;
-      }
-  
-      // sucesso
-      clearForm();
-      setVisible(false);
-      onRefresh();
+    if (!titulo) {
+      console.warn('Tem de escrever um titulo');
+      return;
     }
+    if (!conteudo) {
+      console.warn('Tem de inserir conteúdo');
+      return;
+    }
+
+    const payload = {
+      user_id: session.user.id,
+      titulo: titulo,
+      conteudo: conteudo,
+      data_publicacao: new Date().toISOString(),
+      numero_gostos: 0,
+      numero_comentarios: 0,
+    };
+
+    const { error } = await supabase.from('publicacoes').insert([payload]);
+
+    if (error) {
+      console.warn('insert error', error);
+      return;
+    }
+
+    // sucesso
+    clearForm();
+    setVisible(false);
+    onRefresh();
+  }
+
+  async function toggleLike(post: Publicacao) {
+    try {
+      if (post.liked) {
+        // remover like
+        await supabase.from('gostos_publicacao').delete().match({ publicacao_id: post.id, user_id: session.user.id });
+        await supabase.from('publicacoes').update({ numero_gostos: (post.numero_gostos || 1) - 1 }).eq('id', post.id);
+        setFeed((prev) =>
+          prev.map((p) => (p.id === post.id ? { ...p, liked: false, numero_gostos: (p.numero_gostos || 1) - 1 } : p))
+        );
+      } else {
+        // adicionar like
+        await supabase.from('gostos_publicacao').insert({ publicacao_id: post.id, user_id: session.user.id });
+        await supabase.from('publicacoes').update({ numero_gostos: (post.numero_gostos || 0) + 1 }).eq('id', post.id);
+        setFeed((prev) =>
+          prev.map((p) => (p.id === post.id ? { ...p, liked: true, numero_gostos: (p.numero_gostos || 0) + 1 } : p))
+        );
+      }
+    } catch (err) {
+      console.error('Erro toggleLike', err);
+    }
+  }
 
   const renderItem = ({ item }: { item: Publicacao }) => {
     const avatar = item.utilizador?.avatar_url;
@@ -243,8 +282,8 @@ export default function PublicacoesFeed() {
           {!!item.conteudo && <Text style={[styles.content, isDark ? styles.textDark : styles.textLight]}>{item.conteudo}</Text>}
           {!!item.imagem_url && <Image source={{ uri: item.imagem_url }} style={styles.postImage} />}
           <View style={styles.metaRow}>
-            <Text style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>💬 {item.numero_comentarios ?? 0}</Text>
-            <Text style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>❤️ {item.numero_gostos ?? 0}</Text>
+            <Text onPress={() => console.log("teste")} style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>💬 {item.numero_comentarios ?? 0}</Text>
+            <Text onPress={() => toggleLike(item)} style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>{item.liked ? '❤️' : '♡'} {item.numero_gostos ?? 0}</Text>
           </View>
         </View>
       </View>
@@ -274,7 +313,7 @@ export default function PublicacoesFeed() {
           contentContainerStyle={{ paddingBottom: 120 }}
         />
       )}
-      <Button style={ styles.roundButton } onPress={show}>Criar nova Publicação</Button>
+      <Button style={styles.roundButton} onPress={show}>Criar nova Publicação</Button>
 
       <Modal
         visible={visible}
