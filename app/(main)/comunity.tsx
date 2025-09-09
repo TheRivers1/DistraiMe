@@ -1,5 +1,5 @@
 // PublicacoesFeed.tsx
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,16 @@ import {
   SafeAreaView,
   TouchableOpacity,
   useColorScheme,
+  Modal,
 } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
+import { Button } from '@rneui/themed';
+import ThemedTextInput from '@components/ThemedTextInput';
+import ThemedDropDown from '@components/ThemedDropDown';
+import ThemedButton from '@components/ThemedButton';
+import { Link } from 'expo-router';
+import { Colors } from 'constants/Colors';
+import { AuthContext } from 'app/_layout';
 
 // ---------- CONFIG (define as env vars em produção) ----------
 const SUPABASE_URL = process.env.SUPABASE_URL
@@ -125,11 +133,26 @@ export default function PublicacoesFeed() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
+  const { session } = useContext(AuthContext)
   const [feed, setFeed] = useState<Publicacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [cursor, setCursor] = useState<string | null>(null);
   const flatRef = useRef<FlatList<Publicacao>>(null);
+  const [visible, setVisible] = useState(false);
+  const [titulo, setTitulo] = useState("");
+  const [conteudo, setConteudo] = useState("");
+
+  const show = () => setVisible(true);
+  const hide = () => {
+    setVisible(false);
+    clearForm();
+  };
+
+  function clearForm() {
+    setTitulo("");
+    setConteudo("");
+  }
 
   const loadInitial = useCallback(async () => {
     try {
@@ -176,7 +199,34 @@ export default function PublicacoesFeed() {
     loadInitial();
   }, [loadInitial]);
 
+  async function handleAddExpense() {
 
+      if (!titulo) {
+        console.warn("Tem de escrever um titulo");
+        return;
+      }
+      if (!conteudo) {
+        console.warn("Tem de inserir conteúdo");
+        return;
+      }  
+      const payload = {
+        user_id: session.user.id,
+        titulo: titulo,
+        conteudo: conteudo
+      };
+  
+      const { error } = await supabase.from("publicacoes").insert([payload]);
+
+      if (error) {
+        console.warn("insert error", error);
+        return;
+      }
+  
+      // sucesso
+      clearForm();
+      setVisible(false);
+      onRefresh();
+    }
 
   const renderItem = ({ item }: { item: Publicacao }) => {
     const avatar = item.utilizador?.avatar_url;
@@ -224,6 +274,53 @@ export default function PublicacoesFeed() {
           contentContainerStyle={{ paddingBottom: 120 }}
         />
       )}
+      <Button style={ styles.roundButton } onPress={show}>Criar nova Publicação</Button>
+
+      <Modal
+        visible={visible}
+        animationType="slide"
+        onRequestClose={hide}
+        transparent={false}
+      >
+        <SafeAreaView style={styles.modal}>
+          <Text style={[styles.heading, { margin: 20 }]}>Nova Publicação</Text>
+
+          <ThemedTextInput
+            style={{ width: "80%", marginBottom: 12 }}
+            placeholder="Titulo"
+            value={titulo}
+            onChangeText={setTitulo}
+            keyboardType="default"
+            autoCapitalize="sentences"
+          />
+          <ThemedTextInput
+            style={{ width: "80%", marginBottom: 12 }}
+            placeholder="Conteúdo"
+            value={conteudo}
+            onChangeText={setConteudo}
+            keyboardType="default"
+          />
+
+          <ThemedButton
+            style={[styles.btnAdd, { width: "50%" }]}
+            onPress={handleAddExpense}
+          >
+            <Text style={styles.btnText}>Adicionar</Text>
+          </ThemedButton>
+
+          <Link href="" onPress={hide}>
+            <Text
+              style={[
+                styles.btnText,
+                { color: Colors.warning, fontWeight: "normal" },
+              ]}
+            >
+              Cancelar
+            </Text>
+          </Link>
+        </SafeAreaView>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -249,4 +346,30 @@ const styles = StyleSheet.create({
   mutedDark: { color: '#8b98a5' },
   bgLight: { backgroundColor: '#fff' },
   bgDark: { backgroundColor: '#000' },
+  roundButton: { alignItems: 'center', borderRadius: 1000, marginBottom: 20, width: 50 },
+  modal: {
+    flex: 1,
+    backgroundColor: "#f2f2f2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnText: {
+    color: "#f2f2f2",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginLeft: 10,
+  },
+  btnAdd: {
+    width: "80%",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  heading: {
+    fontWeight: "bold",
+    fontSize: 26,
+    textAlign: "center",
+  },
 });
