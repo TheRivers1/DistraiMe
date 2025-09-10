@@ -1,77 +1,75 @@
-import { StyleSheet, Text, View, Alert} from "react-native";
+import { StyleSheet, View, Alert } from "react-native";
 import { supabase } from "lib/supabase";
 import { router } from "expo-router";
-import { useState, useEffect, useContext } from 'react'
-import { Button, Input } from '@rneui/themed'
+import { useState, useEffect, useContext } from "react";
+import { Button, Input } from "@rneui/themed";
 import { AuthContext } from "app/_layout";
 import Avatar from "@components/Avatar";
 
-
 async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  router.push("../(auth)/login")
+  const { error } = await supabase.auth.signOut();
+  router.push("../(auth)/login");
 }
 
 export default function profile() {
-  const [loading, setLoading] = useState(true)
-  const [username, setUsername] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
-  const { session } = useContext(AuthContext)
+  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const { session } = useContext(AuthContext);
 
   useEffect(() => {
-    if (session) getProfile()
-  }, [session])
+    if (session) getProfile();
+  }, [session]);
   async function getProfile() {
-
     try {
-      setLoading(true)
-      if (!session?.user) throw new Error('No user on the session!') 
+      setLoading(true);
+      if (!session?.user) throw new Error("No user on the session!");
       const { data, error, status } = await supabase
-        .from('utilizadores')
-        .select('name, avatar_url')
-        .eq('user_id', session?.user.id)
-        .single()
+        .from("utilizadores")
+        .select("name, avatar_url")
+        .eq("user_id", session?.user.id)
+        .single();
       if (error && status !== 406) {
-           console.log("Yah meu")
-        throw error
+        console.log("Yah meu");
+        throw error;
       }
       if (data) {
-        setUsername(data.name)
-        setAvatarUrl(data.avatar_url)
+        setUsername(data.name);
+        setAvatarUrl(data.avatar_url);
       }
     } catch (error) {
       if (error instanceof Error) {
-        Alert.alert(error.message)
+        Alert.alert(error.message);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
   async function updateProfile({
     username,
     avatar_url,
   }: {
-    username: string
-    avatar_url: string
+    username: string;
+    avatar_url: string;
   }) {
     try {
-      setLoading(true)
-      if (!session?.user) throw new Error('No user on the session!')
+      setLoading(true);
+      if (!session?.user) throw new Error("No user on the session!");
       const updates = {
         user_id: session?.user.id,
-        name:username,
-        avatar_url
-      }
-      const { error } = await supabase.from('utilizadores').upsert(updates)
+        name: username,
+        avatar_url,
+      };
+      const { error } = await supabase.from("utilizadores").upsert(updates);
       if (error) {
-        throw error
+        throw error;
       }
     } catch (error) {
       if (error instanceof Error) {
-        Alert.alert(error.message)
+        Alert.alert(error.message);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
   return (
@@ -81,8 +79,8 @@ export default function profile() {
           size={200}
           url={avatarUrl}
           onUpload={(url: string) => {
-            setAvatarUrl(url)
-            updateProfile({ username, avatar_url: url })
+            setAvatarUrl(url);
+            updateProfile({ username, avatar_url: url });
           }}
         />
       </View>
@@ -90,11 +88,15 @@ export default function profile() {
         <Input label="Email" value={session?.user?.email} disabled />
       </View>
       <View style={styles.verticallySpaced}>
-        <Input label="Nome" value={username || ''} onChangeText={(text) => setUsername(text)} />
+        <Input
+          label="Nome"
+          value={username || ""}
+          onChangeText={(text) => setUsername(text)}
+        />
       </View>
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Button
-          title={loading ? 'Loading ...' : 'Update'}
+          title={loading ? "Loading ..." : "Update"}
           onPress={() => updateProfile({ username, avatar_url: avatarUrl })}
           disabled={loading}
         />
@@ -103,7 +105,7 @@ export default function profile() {
         <Button title="Sign Out" onPress={() => signOut()} />
       </View>
     </View>
-  )
+  );
 }
 const styles = StyleSheet.create({
   container: {
@@ -113,9 +115,9 @@ const styles = StyleSheet.create({
   verticallySpaced: {
     paddingTop: 4,
     paddingBottom: 4,
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
   },
   mt20: {
     marginTop: 20,
   },
-})
+});
