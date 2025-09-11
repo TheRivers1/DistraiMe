@@ -1,4 +1,11 @@
-import { StyleSheet, Text, Modal, SafeAreaView, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  Modal,
+  SafeAreaView,
+  View,
+  ScrollView,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { Colors } from "constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
@@ -71,7 +78,7 @@ const Gastos = () => {
         .select("id, nome, valor, descricao, data_gasto, categoria!inner(nome)")
         .eq("user_id", user.id)
         .order("data_gasto", { ascending: false })
-        .limit(10);
+        .limit(30);
       if (!mounted) return;
       if (error) {
         console.warn("fetch gastos error", error);
@@ -135,13 +142,10 @@ const Gastos = () => {
       return;
     }
 
-    // sucesso
     clearForm();
     setVisible(false);
-    // opcional: emitir evento / refetch resumo (não implementado aqui)
   }
 
-  // transform categories for dropdown
   const ddItems = categories.map((c) => ({ label: c.nome, value: c.id }));
 
   return (
@@ -233,7 +237,7 @@ const Gastos = () => {
         </SafeAreaView>
       </Modal>
 
-      <View style={{ width: "90%", marginTop: 16 }}>
+      <View style={{ width: "90%", marginTop: 16, flex: 1 }}>
         <Text style={{ fontWeight: "bold", fontSize: 20, marginBottom: 8 }}>
           Últimos gastos
         </Text>
@@ -242,56 +246,61 @@ const Gastos = () => {
         ) : recentExpenses.length === 0 ? (
           <Text>Nenhum gasto registado.</Text>
         ) : (
-          recentExpenses.map((gasto) => (
-            <View
-              key={gasto.id}
-              style={{
-                borderWidth: 1,
-                borderRadius: 14,
-                borderColor: "#161515ff",
-                backgroundColor: "#fff",
-                padding: 12,
-                marginBottom: 16,
-              }}
-            >
+          <ScrollView
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: "1%" }}
+          >
+            {recentExpenses.map((gasto) => (
               <View
+                key={gasto.id}
                 style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
+                  borderWidth: 1,
+                  borderRadius: 14,
+                  borderColor: "#161515ff",
+                  backgroundColor: "#fff",
+                  padding: 12,
+                  marginBottom: 16,
                 }}
               >
-                <Text style={{ fontWeight: "bold", fontSize: 20 }}>
-                  {gasto.categoria?.nome ?? "Sem categoria"}
-                </Text>
-                <Text style={{ color: "#888", fontSize: 12 }}>
-                  {new Date(gasto.data_gasto).toLocaleDateString("pt-PT")}
-                </Text>
-              </View>
-
-              {/* Linha de baixo: Descrição e Valor */}
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginTop: 6,
-                }}
-              >
-                <Text style={{ flex: 1, fontSize: 16 }} numberOfLines={2}>
-                  {gasto.nome ?? ""}
-                </Text>
-                <Text
+                <View
                   style={{
-                    fontWeight: "bold",
-                    color: "#007AFF",
-                    fontSize: 16,
-                    marginLeft: 10,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
                   }}
                 >
-                  {Number(gasto.valor).toFixed(2)} €
-                </Text>
+                  <Text style={{ fontWeight: "bold", fontSize: 20 }}>
+                    {gasto.categoria?.nome ?? "Sem categoria"}
+                  </Text>
+                  <Text style={{ color: "#888", fontSize: 12 }}>
+                    {new Date(gasto.data_gasto).toLocaleDateString("pt-PT")}
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginTop: 6,
+                  }}
+                >
+                  <Text style={{ flex: 1, fontSize: 16 }} numberOfLines={2}>
+                    {gasto.nome ?? ""}
+                  </Text>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      color: "#007AFF",
+                      fontSize: 16,
+                      marginLeft: 10,
+                    }}
+                  >
+                    {Number(gasto.valor).toFixed(2)} €
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))
+            ))}
+          </ScrollView>
         )}
       </View>
     </ThemedView>

@@ -1,13 +1,52 @@
 import { StyleSheet, Text } from "react-native";
 import { Slot, useRouter, usePathname } from "expo-router";
+import { useContext, useState, useEffect } from "react";
 import { Colors } from "constants/Colors";
 import Separator from "@components/Separator";
 import ThemedView from "@components/ThemedView";
 import ThemedButton from "@components/ThemedButton";
+import { AuthContext } from "app/_layout";
+import { supabase } from "lib/supabase";
 
 const Dashboard = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { session } = useContext(AuthContext);
+  const [userName, setUserName] = useState<string>("");
+
+  async function getUserName(): Promise<string | null> {
+    try {
+      if (!session?.user) return null;
+      const { data, error } = await supabase
+        .from("utilizadores")
+        .select("name")
+        .eq("user_id", session?.user.id)
+        .single();
+
+      if (error) {
+        console.error("Error fetching user name:", error);
+        return null;
+      }
+
+      return data?.name || null;
+    } catch (error) {
+      console.error("Error in getUserName:", error);
+      return null;
+    }
+  }
+
+  // Load user name when component mounts
+  useEffect(() => {
+    const loadUserName = async () => {
+      if (session) {
+        const name = await getUserName();
+        if (name) {
+          setUserName(name);
+        }
+      }
+    };
+    loadUserName();
+  }, [session]);
 
   const isActive = (page: string) => pathname.endsWith(page);
 
@@ -15,7 +54,7 @@ const Dashboard = () => {
     <>
       <ThemedView style={[styles.header, { paddingBottom: 0 }]} safe={true}>
         <Text style={styles.heading}>Bem vindo de volta</Text>
-        <Text style={styles.text}></Text>
+        <Text style={styles.text}>{userName}</Text>
         <ThemedView style={styles.row} safe={false}>
           <ThemedButton
             style={[

@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   monthLabel: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     marginHorizontal: 10,
     textTransform: "capitalize",
@@ -321,6 +321,7 @@ const styles = StyleSheet.create({
   },
   message: {
     color: "#6b6b6b",
+    fontSize: 16,
   },
   emptyBox: {
     alignItems: "center",

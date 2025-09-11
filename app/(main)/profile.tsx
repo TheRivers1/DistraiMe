@@ -1,10 +1,13 @@
-import { StyleSheet, View, Alert } from "react-native";
+import { StyleSheet, View, Alert, Text } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import { supabase } from "lib/supabase";
 import { router } from "expo-router";
 import { useState, useEffect, useContext } from "react";
 import { Button, Input } from "@rneui/themed";
 import { AuthContext } from "app/_layout";
 import Avatar from "@components/Avatar";
+import ThemedButton from "@components/ThemedButton";
+import { Colors } from "constants/Colors";
 
 async function signOut() {
   const { error } = await supabase.auth.signOut();
@@ -30,7 +33,6 @@ export default function profile() {
         .eq("user_id", session?.user.id)
         .single();
       if (error && status !== 406) {
-        console.log("Yah meu");
         throw error;
       }
       if (data) {
@@ -74,6 +76,11 @@ export default function profile() {
   }
   return (
     <View style={styles.container}>
+      <View style={styles.logoutButton}>
+        <Text style={styles.logoutIcon} onPress={() => signOut()}>
+          <Feather name="log-out" size={30} color={Colors.primary} />
+        </Text>
+      </View>
       <View>
         <Avatar
           size={200}
@@ -96,21 +103,32 @@ export default function profile() {
       </View>
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Button
-          title={loading ? "Loading ..." : "Update"}
+          title={loading ? "A carregar ..." : "Atualizar"}
           onPress={() => updateProfile({ username, avatar_url: avatarUrl })}
           disabled={loading}
         />
-      </View>
-      <View style={styles.verticallySpaced}>
-        <Button title="Sign Out" onPress={() => signOut()} />
       </View>
     </View>
   );
 }
 const styles = StyleSheet.create({
   container: {
-    marginTop: 40,
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     padding: 12,
+  },
+  logoutButton: {
+    position: "absolute",
+    top: "10%",
+    right: 10,
+  },
+  logoutIcon: {
+    width: 70,
+    height: 70,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
   },
   verticallySpaced: {
     paddingTop: 4,

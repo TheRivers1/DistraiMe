@@ -1,5 +1,11 @@
 // PublicacoesFeed.tsx
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   Text,
@@ -9,23 +15,23 @@ import {
   Image,
   ActivityIndicator,
   SafeAreaView,
-  TouchableOpacity,
   useColorScheme,
   Modal,
   TextInput,
-} from 'react-native';
-import { createClient } from '@supabase/supabase-js';
-import { Button } from '@rneui/themed';
-import ThemedTextInput from '@components/ThemedTextInput';
-import ThemedDropDown from '@components/ThemedDropDown';
-import ThemedButton from '@components/ThemedButton';
-import { Link } from 'expo-router';
-import { Colors } from 'constants/Colors';
-import { AuthContext } from 'app/_layout';
+} from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { createClient } from "@supabase/supabase-js";
+import { Button } from "@rneui/themed";
+import ThemedTextInput from "@components/ThemedTextInput";
+import ThemedButton from "@components/ThemedButton";
+import { Link } from "expo-router";
+import { Colors } from "constants/Colors";
+import { AuthContext } from "app/_layout";
+import ThemedView from "@components/ThemedView";
 
 // ---------- CONFIG (define as env vars em produção) ----------
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ---------- TIPOS ----------
@@ -60,7 +66,7 @@ type Comentario = {
 
 // ---------- HELPERS ----------
 function timeAgo(iso?: string | null) {
-  if (!iso) return '';
+  if (!iso) return "";
   const now = Date.now();
   const then = new Date(iso).getTime();
   const s = Math.max(1, Math.floor((now - then) / 1000));
@@ -76,42 +82,49 @@ function timeAgo(iso?: string | null) {
 
 // ---------- FETCH (paginado, pull-to-refresh) ----------
 // Substitui a função fetchFeed inteira por isto
-async function fetchFeed({ limit = 20, cursor, userId }: { limit?: number; cursor?: string | null; userId: string }) {
-
-
+async function fetchFeed({
+  limit = 20,
+  cursor,
+  userId,
+}: {
+  limit?: number;
+  cursor?: string | null;
+  userId: string;
+}) {
   async function downloadImage(path: string): Promise<string> {
     try {
-      const { data, error } = await supabase.storage.from('user_profiles/pics').download(path)
+      const { data, error } = await supabase.storage
+        .from("user_profiles/pics")
+        .download(path);
       if (error) {
-        throw error
+        throw error;
       }
 
       return new Promise((resolve, reject) => {
-
         const fileReaderInstance = new FileReader();
 
         fileReaderInstance.onload = () => {
-          resolve((fileReaderInstance.result as string));
+          resolve(fileReaderInstance.result as string);
         };
 
         fileReaderInstance.onerror = (error) => {
           reject(error);
         };
-        fileReaderInstance.readAsDataURL(data)
-      }
-      )
+        fileReaderInstance.readAsDataURL(data);
+      });
     } catch (error) {
       if (error instanceof Error) {
-        console.log('Error downloading image: ', error.message)
+        console.log("Error downloading image: ", error.message);
       }
     }
-    return null
+    return null;
   }
 
   // query que inclui a relação dos gostos (para sabermos se o user gostou)
   let q = supabase
-    .from('publicacoes')
-    .select(`
+    .from("publicacoes")
+    .select(
+      `
       id,
       user_id,
       titulo,
@@ -122,11 +135,12 @@ async function fetchFeed({ limit = 20, cursor, userId }: { limit?: number; curso
       numero_comentarios,
       utilizadores!publicacoes_user_id_fkey(user_id, name, avatar_url),
       gostos_publicacao(user_id)
-    `)
-    .order('data_publicacao', { ascending: false })
+    `
+    )
+    .order("data_publicacao", { ascending: false })
     .limit(limit);
 
-  if (cursor) q = q.lt('data_publicacao', cursor);
+  if (cursor) q = q.lt("data_publicacao", cursor);
 
   const { data, error } = await q;
   if (error) throw error;
@@ -139,7 +153,9 @@ async function fetchFeed({ limit = 20, cursor, userId }: { limit?: number; curso
     // determinamos se o utilizador atual já gostou desta publicação
     let liked = false;
     if (Array.isArray((row as any).gostos_publicacao) && userId) {
-      liked = (row as any).gostos_publicacao.some((g: any) => g.user_id === userId);
+      liked = (row as any).gostos_publicacao.some(
+        (g: any) => g.user_id === userId
+      );
     }
 
     finalArray.push({
@@ -152,13 +168,12 @@ async function fetchFeed({ limit = 20, cursor, userId }: { limit?: number; curso
   return finalArray;
 }
 
-
 // ---------- COMPONENTE ----------
 export default function PublicacoesFeed() {
   const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
+  const isDark = scheme === "dark";
 
-  const { session } = useContext(AuthContext)
+  const { session } = useContext(AuthContext);
   const [feed, setFeed] = useState<Publicacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -171,6 +186,7 @@ export default function PublicacoesFeed() {
   const [selectedPost, setSelectedPost] = useState<Publicacao | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [expandedPosts, setExpandedPosts] = useState<Set<number>>(new Set());
 
   const show = () => setVisible(true);
   const hide = () => {
@@ -188,9 +204,11 @@ export default function PublicacoesFeed() {
       setLoading(true);
       const data = await fetchFeed({ limit: 20, userId: session.user.id });
       setFeed(data);
-      setCursor(data.length ? data[data.length - 1].data_publicacao ?? null : null);
+      setCursor(
+        data.length ? data[data.length - 1].data_publicacao ?? null : null
+      );
     } catch (err: any) {
-      console.error('Erro a carregar feed', err);
+      console.error("Erro a carregar feed", err);
     } finally {
       setLoading(false);
     }
@@ -201,9 +219,11 @@ export default function PublicacoesFeed() {
       setRefreshing(true);
       const data = await fetchFeed({ limit: 20, userId: session.user.id });
       setFeed(data);
-      setCursor(data.length ? data[data.length - 1].data_publicacao ?? null : null);
+      setCursor(
+        data.length ? data[data.length - 1].data_publicacao ?? null : null
+      );
     } catch (err: any) {
-      console.error('Erro refresh', err);
+      console.error("Erro refresh", err);
     } finally {
       setRefreshing(false);
     }
@@ -212,7 +232,11 @@ export default function PublicacoesFeed() {
   const loadMore = useCallback(async () => {
     if (!cursor) return; // sem cursor não há mais
     try {
-      const data = await fetchFeed({ limit: 20, cursor, userId: session.user.id });
+      const data = await fetchFeed({
+        limit: 20,
+        cursor,
+        userId: session.user.id,
+      });
       if (data.length === 0) {
         setCursor(null);
         return;
@@ -220,7 +244,7 @@ export default function PublicacoesFeed() {
       setFeed((p) => [...p, ...data]);
       setCursor(data[data.length - 1].data_publicacao ?? null);
     } catch (err: any) {
-      console.error('Erro loadMore', err);
+      console.error("Erro loadMore", err);
     }
   }, [cursor]);
 
@@ -230,11 +254,11 @@ export default function PublicacoesFeed() {
 
   async function handleAddExpense() {
     if (!titulo) {
-      console.warn('Tem de escrever um titulo');
+      console.warn("Tem de escrever um titulo");
       return;
     }
     if (!conteudo) {
-      console.warn('Tem de inserir conteúdo');
+      console.warn("Tem de inserir conteúdo");
       return;
     }
 
@@ -247,10 +271,10 @@ export default function PublicacoesFeed() {
       numero_comentarios: 0,
     };
 
-    const { error } = await supabase.from('publicacoes').insert([payload]);
+    const { error } = await supabase.from("publicacoes").insert([payload]);
 
     if (error) {
-      console.warn('insert error', error);
+      console.warn("insert error", error);
       return;
     }
 
@@ -264,21 +288,44 @@ export default function PublicacoesFeed() {
     try {
       if (post.liked) {
         // remover like
-        await supabase.from('gostos_publicacao').delete().match({ publicacao_id: post.id, user_id: session.user.id });
-        await supabase.from('publicacoes').update({ numero_gostos: (post.numero_gostos || 1) - 1 }).eq('id', post.id);
+        await supabase
+          .from("gostos_publicacao")
+          .delete()
+          .match({ publicacao_id: post.id, user_id: session.user.id });
+        await supabase
+          .from("publicacoes")
+          .update({ numero_gostos: (post.numero_gostos || 1) - 1 })
+          .eq("id", post.id);
         setFeed((prev) =>
-          prev.map((p) => (p.id === post.id ? { ...p, liked: false, numero_gostos: (p.numero_gostos || 1) - 1 } : p))
+          prev.map((p) =>
+            p.id === post.id
+              ? {
+                  ...p,
+                  liked: false,
+                  numero_gostos: (p.numero_gostos || 1) - 1,
+                }
+              : p
+          )
         );
       } else {
         // adicionar like
-        await supabase.from('gostos_publicacao').insert({ publicacao_id: post.id, user_id: session.user.id });
-        await supabase.from('publicacoes').update({ numero_gostos: (post.numero_gostos || 0) + 1 }).eq('id', post.id);
+        await supabase
+          .from("gostos_publicacao")
+          .insert({ publicacao_id: post.id, user_id: session.user.id });
+        await supabase
+          .from("publicacoes")
+          .update({ numero_gostos: (post.numero_gostos || 0) + 1 })
+          .eq("id", post.id);
         setFeed((prev) =>
-          prev.map((p) => (p.id === post.id ? { ...p, liked: true, numero_gostos: (p.numero_gostos || 0) + 1 } : p))
+          prev.map((p) =>
+            p.id === post.id
+              ? { ...p, liked: true, numero_gostos: (p.numero_gostos || 0) + 1 }
+              : p
+          )
         );
       }
     } catch (err) {
-      console.error('Erro toggleLike', err);
+      console.error("Erro toggleLike", err);
     }
   }
 
@@ -292,23 +339,27 @@ export default function PublicacoesFeed() {
     try {
       const { data, error } = await supabase
         .from("comentarios_publicacao")
-        .select(`
+        .select(
+          `
         id,
         conteudo,
         data_comentario,
         utilizadores:user_id(name, avatar_url)
-      `)
+      `
+        )
         .eq("publicacao_id", publicacaoId)
         .order("data_comentario", { ascending: false });
 
       if (error) throw error;
 
       // Função para baixar imagem da storage
-      async function downloadImage(path?: string | null): Promise<string | null> {
+      async function downloadImage(
+        path?: string | null
+      ): Promise<string | null> {
         if (!path) return null;
         try {
           const { data, error } = await supabase.storage
-            .from('user_profiles/pics')
+            .from("user_profiles/pics")
             .download(path);
           if (error) throw error;
 
@@ -319,7 +370,7 @@ export default function PublicacoesFeed() {
             reader.readAsDataURL(data);
           });
         } catch (err) {
-          console.error('Erro a baixar avatar:', err);
+          console.error("Erro a baixar avatar:", err);
           return null;
         }
       }
@@ -345,13 +396,11 @@ export default function PublicacoesFeed() {
     if (!newComment.trim() || !selectedPost) return;
 
     try {
-      const { error } = await supabase
-        .from("comentarios_publicacao")
-        .insert({
-          publicacao_id: selectedPost.id,
-          user_id: session.user.id,
-          conteudo: newComment.trim(),
-        });
+      const { error } = await supabase.from("comentarios_publicacao").insert({
+        publicacao_id: selectedPost.id,
+        user_id: session.user.id,
+        conteudo: newComment.trim(),
+      });
 
       if (error) throw error;
 
@@ -362,27 +411,37 @@ export default function PublicacoesFeed() {
     }
   }
 
-  const renderComment = ({ item }: { item: Comentario }) => {
-    console.log('Item recebido no render:', item);
+  function toggleExpanded(postId: number) {
+    setExpandedPosts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(postId)) {
+        newSet.delete(postId);
+      } else {
+        newSet.add(postId);
+      }
+      return newSet;
+    });
+  }
 
-    const avatar = item.utilizadores?.avatar_url || 'https://via.placeholder.com/48';
+  const renderComment = ({ item }: { item: Comentario }) => {
+    console.log("Item recebido no render:", item);
+
+    const avatar =
+      item.utilizadores?.avatar_url || "https://via.placeholder.com/48";
     const name = item.utilizadores?.name || "Utilizador";
 
     return (
-      <View style={[styles.comment, isDark ? styles.postDark : styles.postLight]}>
+      <View style={styles.comment}>
         <Image source={{ uri: avatar }} style={styles.avatar} />
         <View style={{ flex: 1 }}>
           <View style={styles.row}>
-            <Text style={[styles.name, isDark ? styles.textDark : styles.textLight]}>
-              {name}
-            </Text>
-            <Text style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>
-              {" · "}{timeAgo(item.data_comentario)}
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.muted}>
+              {" · "}
+              {timeAgo(item.data_comentario)}
             </Text>
           </View>
-          <Text style={[styles.content, isDark ? styles.textDark : styles.textLight]}>
-            {item.conteudo}
-          </Text>
+          <Text style={styles.content}>{item.conteudo}</Text>
         </View>
       </View>
     );
@@ -390,21 +449,51 @@ export default function PublicacoesFeed() {
 
   const renderItem = ({ item }: { item: Publicacao }) => {
     const avatar = item.utilizador?.avatar_url;
-    const name = item.utilizador?.name || 'Utilizador';
+    const name = item.utilizador?.name || "Utilizador";
+    const isExpanded = expandedPosts.has(item.id);
+    const content = item.conteudo || "";
+    const shouldTruncate = content.length > 150;
+    const displayContent =
+      shouldTruncate && !isExpanded
+        ? content.substring(0, 150) + "..."
+        : content;
+
     return (
-      <View style={[styles.post, isDark ? styles.postDark : styles.postLight]}>
-        <Image key={item.utilizador.user_id} source={{ uri: avatar }} style={styles.avatar} />
+      <View style={styles.post}>
+        <Image
+          key={item.utilizador.user_id}
+          source={{ uri: avatar }}
+          style={styles.avatar}
+        />
         <View style={{ flex: 1 }}>
           <View style={styles.row}>
-            <Text style={[styles.name, isDark ? styles.textDark : styles.textLight]}>{name}</Text>
-            <Text style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}> · {timeAgo(item.data_publicacao)}</Text>
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.muted}> · {timeAgo(item.data_publicacao)}</Text>
           </View>
-          {!!item.titulo && <Text style={[styles.title, isDark ? styles.textDark : styles.textLight]}>{item.titulo}</Text>}
-          {!!item.conteudo && <Text style={[styles.content, isDark ? styles.textDark : styles.textLight]}>{item.conteudo}</Text>}
-          {!!item.imagem_url && <Image source={{ uri: item.imagem_url }} style={styles.postImage} />}
+          {!!item.titulo && <Text style={styles.title}>{item.titulo}</Text>}
+          {!!item.conteudo && (
+            <View>
+              <Text style={styles.content}>{displayContent}</Text>
+              {shouldTruncate && (
+                <Text
+                  style={styles.readMoreButton}
+                  onPress={() => toggleExpanded(item.id)}
+                >
+                  {isExpanded ? "ler menos" : "ler mais"}
+                </Text>
+              )}
+            </View>
+          )}
+          {!!item.imagem_url && (
+            <Image source={{ uri: item.imagem_url }} style={styles.postImage} />
+          )}
           <View style={styles.metaRow}>
-            <Text onPress={() => openComments(item)} style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>💬 {item.numero_comentarios ?? 0}</Text>
-            <Text onPress={() => toggleLike(item)} style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>{item.liked ? '❤️' : '♡'} {item.numero_gostos ?? 0}</Text>
+            <Text onPress={() => openComments(item)} style={styles.muted}>
+              💬 {item.numero_comentarios ?? 0}
+            </Text>
+            <Text onPress={() => toggleLike(item)} style={styles.muted}>
+              {item.liked ? "❤️" : "♡"} {item.numero_gostos ?? 0}
+            </Text>
           </View>
         </View>
       </View>
@@ -412,7 +501,7 @@ export default function PublicacoesFeed() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, isDark ? styles.bgDark : styles.bgLight]}>
+    <SafeAreaView style={styles.container}>
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator />
@@ -423,18 +512,26 @@ export default function PublicacoesFeed() {
           data={feed}
           keyExtractor={(i) => String(i.id)}
           renderItem={renderItem}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1d9bf0" />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#1d9bf0"
+            />
+          }
           onEndReachedThreshold={0.5}
           onEndReached={loadMore}
           ListEmptyComponent={
             <View style={{ padding: 24 }}>
-              <Text style={isDark ? styles.mutedDark : styles.mutedLight}>Ainda não há publicações.</Text>
+              <Text>Ainda não há publicações.</Text>
             </View>
           }
           contentContainerStyle={{ paddingBottom: 120 }}
         />
       )}
-      <Button style={styles.roundButton} onPress={show}>Criar nova Publicação</Button>
+      <ThemedButton style={styles.floatingButton} onPress={show}>
+        <Feather name="edit-3" size={30} color="#fff" />
+      </ThemedButton>
 
       <Modal
         visible={visible}
@@ -454,18 +551,21 @@ export default function PublicacoesFeed() {
             autoCapitalize="sentences"
           />
           <ThemedTextInput
-            style={{ width: "80%", marginBottom: 12 }}
+            style={{ width: "80%", height: "20%", marginBottom: 12 }}
             placeholder="Conteúdo"
             value={conteudo}
             onChangeText={setConteudo}
             keyboardType="default"
+            multiline={true}
+            numberOfLines={10}
+            textAlignVertical="top"
           />
 
           <ThemedButton
             style={[styles.btnAdd, { width: "50%" }]}
             onPress={handleAddExpense}
           >
-            <Text style={styles.btnText}>Adicionar</Text>
+            <Text style={styles.btnText}>Publicar</Text>
           </ThemedButton>
 
           <Link href="" onPress={hide}>
@@ -486,74 +586,105 @@ export default function PublicacoesFeed() {
         onRequestClose={() => setCommentsVisible(false)}
         transparent={false}
       >
-        <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f2', padding: 10 }}>
-          {/* Cabeçalho */}
-          <Text style={[styles.heading, { marginBottom: 10, color: isDark ? '#fff' : '#000' }]}>
-            Comentários
-          </Text>
+        <SafeAreaView
+          style={{
+            flex: 1,
+            backgroundColor: "#f2f2f2",
+            paddingHorizontal: 20,
+            paddingTop: 20,
+          }}
+        >
+          <View style={styles.commentsHeader}>
+            <View style={{ flex: 1, alignItems: "flex-start" }}>
+              <Text
+                onPress={() => setCommentsVisible(false)}
+                style={{
+                  color: Colors.warning,
+                  fontSize: 14,
+                  paddingLeft: 20,
+                }}
+              >
+                FECHAR
+              </Text>
+            </View>
+            <Text style={[styles.heading, { marginBottom: 10, color: "#000" }]}>
+              Comentários
+            </Text>
+            <View style={{ flex: 1 }}></View>
+          </View>
 
-          {/* FlatList com mesmo fundo do modal */}
           <FlatList
             data={comments}
             keyExtractor={(item) => String(item.id)}
             renderItem={({ item }) => {
-              const avatar = item.utilizadores?.avatar_url || 'https://via.placeholder.com/48';
+              const avatar =
+                item.utilizadores?.avatar_url ||
+                "https://via.placeholder.com/48";
               const name = item.utilizadores?.name || "Utilizador";
               const content = item.conteudo || "";
               const date = item.data_comentario || new Date().toISOString();
 
               return (
-                <View style={[isDark ? styles.commentItemDark : styles.commentItemLight]}>
-                  <Image source={{ uri: avatar }} style={styles.avatar} />
+                <View style={styles.commentItem}>
+                  <Image
+                    source={{ uri: avatar }}
+                    style={styles.avatarComment}
+                  />
                   <View style={{ flex: 1 }}>
                     <View style={styles.row}>
-                      <Text style={[styles.name, isDark ? styles.textDark : styles.textLight]}>
-                        {name}
-                      </Text>
-                      <Text style={[styles.muted, isDark ? styles.mutedDark : styles.mutedLight]}>
-                        {" · "}{timeAgo(date)}
+                      <Text style={styles.name}>{name}</Text>
+                      <Text style={styles.muted}>
+                        {" · "}
+                        {timeAgo(date)}
                       </Text>
                     </View>
-                    <Text style={[styles.content, isDark ? styles.textDark : styles.textLight]}>
-                      {content}
-                    </Text>
+                    <Text style={styles.content}>{content}</Text>
                   </View>
                 </View>
               );
             }}
             ListEmptyComponent={
-              <View style={{ padding: 20, alignItems: 'center' }}>
-                <Text style={isDark ? styles.mutedDark : styles.mutedLight}>
-                  Ainda não há comentários.
-                </Text>
+              <View style={{ padding: 20, alignItems: "center" }}>
+                <Text>Ainda não há comentários.</Text>
               </View>
             }
-            contentContainerStyle={{ paddingBottom: 20, backgroundColor: isDark ? '#000' : '#f2f2f2' }}
-            style={{ flex: 1, backgroundColor: isDark ? '#000' : '#f2f2f2' }}
+            contentContainerStyle={{
+              paddingBottom: 20,
+              backgroundColor: isDark ? "#000" : "#f2f2f2",
+            }}
+            style={{ flex: 1, backgroundColor: isDark ? "#000" : "#f2f2f2" }}
           />
 
           {/* Input de comentário e botão enviar */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginTop: 10,
+              paddingHorizontal: 16,
+              paddingBottom: 10,
+            }}
+          >
             <TextInput
-              style={[styles.commentInput, { flex: 1, backgroundColor: isDark ? '#222' : '#fff', color: isDark ? '#fff' : '#000' }]}
+              style={[
+                styles.commentInput,
+                {
+                  flex: 1,
+                  backgroundColor: "#fff",
+                  color: "#000",
+                },
+              ]}
               placeholder="Escreve um comentário..."
-              placeholderTextColor={isDark ? '#aaa' : '#666'}
+              placeholderTextColor={"#666"}
               value={newComment}
               onChangeText={setNewComment}
             />
             <Button
               onPress={handleAddComment}
-              buttonStyle={{ backgroundColor: '#1d9bf0', borderRadius: 20 }}
+              buttonStyle={{ backgroundColor: "#1d9bf0", borderRadius: 20 }}
               title="Enviar"
             />
           </View>
-
-          {/* Botão fechar */}
-          <Button
-            onPress={() => setCommentsVisible(false)}
-            buttonStyle={{ backgroundColor: Colors.warning, borderRadius: 20, marginTop: 10 }}
-            title="Fechar"
-          />
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -562,26 +693,102 @@ export default function PublicacoesFeed() {
 
 // ---------- STYLES ----------
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  post: { flexDirection: 'row', padding: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  postLight: { borderBottomColor: '#eee', backgroundColor: '#fff' },
-  postDark: { borderBottomColor: '#222', backgroundColor: '#000' },
-  avatar: { width: 48, height: 48, borderRadius: 24, marginRight: 10 },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  name: { fontWeight: '700' },
-  title: { fontWeight: '700', marginTop: 4 },
-  content: { marginTop: 6, lineHeight: 20 },
-  postImage: { width: '100%', height: 180, borderRadius: 12, marginTop: 8, backgroundColor: '#333' },
-  metaRow: { flexDirection: 'row', gap: 12, marginTop: 8, justifyContent: 'flex-start' } as any,
-  muted: { marginLeft: 6 },
-  textLight: { color: '#0f1419' },
-  textDark: { color: '#e7e9ea' },
-  mutedLight: { color: '#536471' },
-  mutedDark: { color: '#8b98a5' },
-  bgLight: { backgroundColor: '#fff' },
-  bgDark: { backgroundColor: '#000' },
-  roundButton: { alignItems: 'center', borderRadius: 1000, marginBottom: 20, width: 50 },
+  container: {
+    flex: 1,
+    width: "100%",
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  post: {
+    flexDirection: "row",
+    padding: "5%",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  avatar: {
+    width: 70,
+    height: 70,
+    borderRadius: 50,
+    marginRight: "5%",
+  },
+  avatarComment: {
+    width: 46,
+    height: 46,
+    borderRadius: 50,
+    marginRight: "5%",
+  },
+  commentItem: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#e0e0e0",
+  },
+  commentsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  name: {
+    fontWeight: "300",
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginTop: 4,
+  },
+  content: {
+    marginTop: 6,
+    lineHeight: 20,
+    fontSize: 16,
+  },
+  postImage: {
+    width: "100%",
+    height: 180,
+    borderRadius: 12,
+    marginTop: 8,
+    backgroundColor: "#333",
+  },
+  metaRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 8,
+    justifyContent: "flex-start",
+  } as any,
+  muted: {
+    marginLeft: 6,
+  },
+  readMoreButton: {
+    color: Colors.iconColorFocused,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  floatingButton: {
+    position: "absolute",
+    bottom: "4%",
+    right: "8%",
+    width: 70,
+    height: 70,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
   modal: {
     flex: 1,
     backgroundColor: "#f2f2f2",
@@ -591,7 +798,6 @@ const styles = StyleSheet.create({
   modalComments: {
     flex: 1,
     backgroundColor: "#f2f2f2",
-    padding: 20, // opcional, para não colar nas bordas
   },
   btnText: {
     color: "#f2f2f2",
@@ -630,23 +836,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    padding: 12,
     marginRight: 10,
     backgroundColor: "#fff",
-  },
-  commentItemLight: {
-    flexDirection: 'row',
-    padding: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#ccc',
-    backgroundColor: '#f2f2f2', // mesmo fundo do modal
-  },
-  commentItemDark: {
-    flexDirection: 'row',
-    padding: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#222',
-    backgroundColor: '#000', // mesmo fundo do modal
   },
 });
