@@ -24,19 +24,47 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
 
   async function signUpWithEmail() {
-    setLoading(true);
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    });
-    if (error) Alert.alert(error.message);
-    if (session) router.push("/resumo");
-    if (!session)
-      Alert.alert("Please check your inbox for email verification!");
-    setLoading(false);
+    try {
+      setLoading(true);
+      const {
+        data: { user, session },
+        error,
+      } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        Alert.alert(error.message);
+        return;
+      }
+
+      if (user) {
+        // Atualizar o nome na tabela "utilizadores" (já criada pelo trigger)
+        const { error: updateError } = await supabase
+          .from("utilizadores")
+          .update({
+            name: nome,
+          })
+          .eq("user_id", user.id);
+
+        if (updateError) {
+          Alert.alert("Erro a atualizar perfil: " + updateError.message);
+        }
+      }
+
+      if (session) {
+        router.push("/resumo");
+      } else {
+        Alert.alert("Verifique a sua caixa de entrada para confirmar o email!");
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        Alert.alert(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -47,7 +75,7 @@ const Register = () => {
         <ThemedView style={styles.container} safe={false}>
           <ThemedLogo />
           <Spacer />
-          <Text style={styles.title}>Register a New Account</Text>
+          <Text style={styles.title}>Registar uma conta nova</Text>
 
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
@@ -67,7 +95,7 @@ const Register = () => {
 
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
-            placeholder="Password"
+            placeholder="Palavra-passe"
             secureTextEntry
             autoCapitalize="none"
             onChangeText={setPassword}
@@ -75,14 +103,14 @@ const Register = () => {
           />
 
           <ThemedButton onPress={signUpWithEmail} style={undefined}>
-            <Text style={{ color: "#f2f2f2" }}>Register</Text>
+            <Text style={{ color: "#f2f2f2" }}>Registar</Text>
           </ThemedButton>
 
           <Spacer />
 
           <Spacer height={100} />
           <Link href="/(auth)/login">
-            <Text style={styles.linkText}>Login instead</Text>
+            <Text style={styles.linkText}>Já tem conta? Faça aqui o login!</Text>
           </Link>
         </ThemedView>
       )}
@@ -101,6 +129,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     textAlign: "center",
+    color: "blue",
   },
   title: {
     textAlign: "center",
