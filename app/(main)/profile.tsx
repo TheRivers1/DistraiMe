@@ -1,4 +1,12 @@
-import { StyleSheet, View, Alert, Text, Modal, TextInput, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Alert,
+  Text,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { supabase } from "lib/supabase";
 import { router } from "expo-router";
@@ -87,7 +95,9 @@ export default function Profile() {
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
       if (error) throw error;
       Alert.alert("Sucesso", "A palavra-passe foi atualizada.");
       setPasswordModalVisible(false);
@@ -133,8 +143,8 @@ export default function Profile() {
         <Button
           title="Alterar Palavra-passe"
           onPress={() => setPasswordModalVisible(true)}
-          buttonStyle={styles.passwordButton}
-          titleStyle={styles.passwordButtonText}
+          buttonStyle={styles.button}
+          titleStyle={styles.buttonText}
         />
       </View>
       <View style={[styles.verticallySpaced, styles.mt20]}>
@@ -142,6 +152,8 @@ export default function Profile() {
           title={loading ? "A carregar ..." : "Atualizar"}
           onPress={() => updateProfile({ username, avatar_url: avatarUrl })}
           disabled={loading}
+          buttonStyle={styles.button}
+          titleStyle={styles.buttonText}
         />
       </View>
 
@@ -281,14 +293,13 @@ const styles = StyleSheet.create({
   iconWrapper: {
     marginLeft: 8,
   },
-  passwordButton: {
+  button: {
     backgroundColor: Colors.primary,
-    borderRadius: 8,
+    borderRadius: 16,
     paddingVertical: 14,
-    marginTop: 10,
-    alignSelf: "stretch",   // ocupa a largura toda como o botão Atualizar
+    alignSelf: "stretch", // ocupa a largura toda como o botão Atualizar
   },
-  passwordButtonText: {
+  buttonText: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#fff",

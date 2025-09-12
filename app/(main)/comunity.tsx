@@ -545,6 +545,7 @@ export default function PublicacoesFeed() {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 12 }}
             placeholder="Titulo"
+            placeholderTextColor="#5c5c5c"
             value={titulo}
             onChangeText={setTitulo}
             keyboardType="default"
@@ -553,6 +554,7 @@ export default function PublicacoesFeed() {
           <ThemedTextInput
             style={{ width: "80%", height: "20%", marginBottom: 12 }}
             placeholder="Conteúdo"
+            placeholderTextColor="#5c5c5c"
             value={conteudo}
             onChangeText={setConteudo}
             keyboardType="default"

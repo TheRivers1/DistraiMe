@@ -171,6 +171,7 @@ const Gastos = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 12 }}
             placeholder="Nome"
+            placeholderTextColor="#5c5c5c"
             value={name}
             onChangeText={setName}
             keyboardType="default"
@@ -195,6 +196,7 @@ const Gastos = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 12 }}
             placeholder="Quantia (ex: 12.50€)"
+            placeholderTextColor="#5c5c5c"
             value={amount}
             onChangeText={setAmount}
             keyboardType="decimal-pad"
@@ -203,6 +205,7 @@ const Gastos = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 12, height: 100 }}
             placeholder="Descrição (opcional)"
+            placeholderTextColor="#5c5c5c"
             value={description}
             onChangeText={setDescription}
             multiline
@@ -212,6 +215,7 @@ const Gastos = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
             placeholder="Data (YYYY-MM-DD) - opcional"
+            placeholderTextColor="#5c5c5c"
             value={dateInput}
             onChangeText={setDateInput}
             keyboardType="default"

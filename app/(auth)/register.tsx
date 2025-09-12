@@ -80,6 +80,7 @@ const Register = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
             placeholder="Nome"
+            placeholderTextColor="#5c5c5c"
             onChangeText={setNome}
             value={nome}
           />
@@ -87,6 +88,7 @@ const Register = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
             placeholder="Email"
+            placeholderTextColor="#5c5c5c"
             keyboardType="email-address"
             autoCapitalize="none"
             onChangeText={setEmail}
@@ -96,6 +98,7 @@ const Register = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
             placeholder="Palavra-passe"
+            placeholderTextColor="#5c5c5c"
             secureTextEntry
             autoCapitalize="none"
             onChangeText={setPassword}
@@ -110,7 +113,9 @@ const Register = () => {
 
           <Spacer height={100} />
           <Link href="/(auth)/login">
-            <Text style={styles.linkText}>Já tem conta? Faça aqui o login!</Text>
+            <Text style={styles.linkText}>
+              Já tem conta? Faça aqui o login!
+            </Text>
           </Link>
         </ThemedView>
       )}
@@ -129,7 +134,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     textAlign: "center",
-    color: "blue",
+    color: Colors.textColor,
   },
   title: {
     textAlign: "center",

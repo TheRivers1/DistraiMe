@@ -57,6 +57,7 @@ const Login = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
             placeholder="Email"
+            placeholderTextColor="#5c5c5c"
             keyboardType="email-address"
             autoCapitalize="none"
             onChangeText={setEmail}
@@ -66,6 +67,7 @@ const Login = () => {
           <ThemedTextInput
             style={{ width: "80%", marginBottom: 20 }}
             placeholder="Palavra-passe"
+            placeholderTextColor="#5c5c5c"
             secureTextEntry
             autoCapitalize="none"
             onChangeText={setPassword}
@@ -80,7 +82,9 @@ const Login = () => {
 
           <Spacer height={100} />
           <Link href="/(auth)/register">
-            <Text style={styles.linkText}>Ainda não tem conta? Faça aqui o registo!</Text>
+            <Text style={styles.linkText}>
+              Ainda não tem conta? Faça aqui o registo!
+            </Text>
           </Link>
         </ThemedView>
       )}
@@ -99,7 +103,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     textAlign: "center",
-    color: "blue",
+    color: Colors.textColor,
   },
   title: {
     textAlign: "center",
